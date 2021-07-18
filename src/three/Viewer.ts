@@ -1,24 +1,31 @@
 import * as THREE from 'three'
-import Global from "./Global";
-import ViewportController from "./Controllers/ViewportController";
-
+import ViewportController from "./base/ViewportController";
+import ObjectManager from './base/ObjectManager';
+import OpenMesh from "OpenMesh";
 
 export default class Viewer {
 
     scene: THREE.Scene;
     container: HTMLCanvasElement;
-    viewportControls: ViewportController = Global.inst.viewportController;
+
+    viewportControls: ViewportController;
+    objectMgr: ObjectManager;
+    openMeshLib: OpenMesh;
 
     constructor() {
         this.scene = new THREE.Scene()
         this.container = document.getElementById('three-canvas') as HTMLCanvasElement;
-        this.viewportControls.init(this.container);
 
-        //initial
-        const geo = new THREE.BoxGeometry(1, 1);
-        const mat = new THREE.MeshBasicMaterial({ color: 'red' });
-        const testBox = new THREE.Mesh(geo, mat);
-        this.scene.add(testBox)
+        //initial set manager
+        this.viewportControls = new ViewportController();
+        this.viewportControls.init(this.container);
+        this.viewportControls.camera.position.set(0, 0, 150)
+
+        this.openMeshLib = new OpenMesh();
+        this.objectMgr = new ObjectManager(this.scene);
+
+        //initial TEST
+        this.objectMgr.createGridMesh();
     }
 
     animate() {
