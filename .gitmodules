@@ -1,0 +1,6 @@
+[submodule "./src/OpenMesh"]
+	path = ./src/OpenMesh
+	url = http://ntustcgalgit.synology.me:30000/OpenMeshTS/OpenMeshTS.git
+[submodule "OpenMesh"]
+	path = OpenMesh
+	url = http://ntustcgalgit.synology.me:30000/OpenMeshTS/OpenMeshTS.git
