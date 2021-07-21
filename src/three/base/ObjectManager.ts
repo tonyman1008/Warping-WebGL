@@ -1,41 +1,56 @@
 import * as THREE from 'three';
 import GridMesh3D from 'three/object/GridMesh3D';
+import OpenMesh from "OpenMesh";
 import FragmentShader from "three/shader/FragmentShader";
 import VertexShader from "three/shader/VertexShader";
-import testImgPath from 'assets/img01.png';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
+import CustomTriMesh from '../../CustomTriMesh';
 
-export default class ObjectManager {
+export default class ObjectManager
+{
 
     scene: THREE.Scene
 
     defaultGeo: THREE.PlaneBufferGeometry
     defaultMat: THREE.MeshBasicMaterial
 
-    gridMeshAry: THREE.Mesh[] = [];
+    gridMeshAry: GridMesh3D[] = [];
 
-    textureMap: THREE.Texture;
     textureLoader: THREE.TextureLoader;
 
-    constructor(iScene: THREE.Scene) {
+    objExporter: OBJExporter;
+    openMeshController: OpenMesh;
+
+    allWireFrameVisible: boolean = true;
+    allVerticesVisible: boolean = true;
+
+    constructor(iScene: THREE.Scene, iOpenMesh: OpenMesh)
+    {
 
         this.scene = iScene;
+        this.openMeshController = iOpenMesh;
 
-        this.defaultGeo = new THREE.PlaneBufferGeometry(100, 100, 10, 10);
-        this.defaultMat = new THREE.MeshBasicMaterial({ color: 'red' });
+        // this.defaultGeo = new THREE.PlaneBufferGeometry(100, 100, 10, 10);
+        // this.defaultMat = new THREE.MeshBasicMaterial({ color: 'red' });
 
+        this.objExporter = new OBJExporter();
         this.textureLoader = new THREE.TextureLoader();
-
-        this.textureMap = this.textureLoader.load(testImgPath);
-        this.textureMap.wrapS = THREE.RepeatWrapping;
-        this.textureMap.wrapT = THREE.RepeatWrapping;
     }
 
-    public createGridMesh() {
-        const geo = new THREE.PlaneBufferGeometry(100, 100, 10, 10);
+    public async createGridMesh(testImgPath, blendColor)
+    {
+        const geo = new THREE.PlaneBufferGeometry(100, 100, 30, 30);
+
+        const textureMap = await this.textureLoader.loadAsync(testImgPath);
+        textureMap.wrapS = THREE.RepeatWrapping;
+        textureMap.wrapT = THREE.RepeatWrapping;
+
         const uniforms = {
-            map: { value: this.textureMap },
-            uvOffset: { value: new THREE.Vector2(0, 0) }
+            map: { value: textureMap },
+            uvOffset: { value: new THREE.Vector2(0, 0) },
+            blendColor: { value: blendColor }
         };
+
         const mat = new THREE.ShaderMaterial({
             vertexShader: VertexShader,
             fragmentShader: FragmentShader,
@@ -47,5 +62,45 @@ export default class ObjectManager {
         const gridMesh = new GridMesh3D(geo, mat);
         this.scene.add(gridMesh);
         this.gridMeshAry.push(gridMesh);
+
+        const triMeshData = await this.parseTriMesh(gridMesh);
+        gridMesh.setTriMesh(triMeshData);
+
+        return gridMesh
+    }
+
+    private async parseTriMesh(mesh: THREE.Object3D)
+    {
+        //triMesh
+        const customtriMesh = new CustomTriMesh();
+        const originObjFormat = this.objExporter.parse(mesh);
+
+        // objExporter will parse all the children object, 
+        // so need to get the substring of origin format
+        // make sure the obj format is only the target mesh
+        const secondObjTagFormatIndex = originObjFormat.indexOf('o ', 1);
+        const removeChildrenObjFormat = originObjFormat.substring(0, secondObjTagFormatIndex)
+
+        const meshConnectivity = await this.openMeshController.read(removeChildrenObjFormat, customtriMesh);
+        console.log("meshConnectivity", meshConnectivity);
+        return meshConnectivity
+    }
+
+    public setAllMeshWireFrameVisible()
+    {
+        this.gridMeshAry.forEach((gird) =>
+        {
+            gird.setWireFrameVisible(!this.allWireFrameVisible)
+        })
+        this.allWireFrameVisible = !this.allWireFrameVisible;
+    }
+
+    public setAllMeshVerticesPointsVisible(option: boolean)
+    {
+        this.gridMeshAry.forEach((gird) =>
+        {
+            gird.setVerticesPointsVisible(!this.allVerticesVisible)
+        })
+        this.allVerticesVisible = !this.allVerticesVisible;
     }
 }
