@@ -6,6 +6,7 @@ import MeshEditor from './MeshEditor';
 import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
 import testImgPath from 'assets/balenciagaBag_crop/img01.png';
+import ASAP from './ASAP/initialization';
 
 export default class Viewer
 {
@@ -23,6 +24,7 @@ export default class Viewer
 
     testWarpDegree: number;
     defaultPositionAttribute: THREE.BufferAttribute;
+    ASAP: ASAP;
 
     constructor()
     {
@@ -37,11 +39,12 @@ export default class Viewer
         this.openMeshController = new OpenMesh();
         this.meshEditor = new MeshEditor(this.viewportControls.camera);
         this.objectMgr = new ObjectManager(this.scene, this.openMeshController);
-
         this.datGUI = new dat.GUI();
 
+        this.ASAP = new ASAP(this.viewportControls.camera, this.scene, this.viewportControls.renderer);
+
         this.testWarpDegree = 0;
-        this.testCreateMesh().then();
+        this.testCreateMesh();
         this.setGUI()
     }
 
@@ -70,6 +73,8 @@ export default class Viewer
         console.log(this.testMesh);
         this.meshEditor.load(this.testMesh, this.testMesh.verticesPoints, this.testMesh.triMesh);
         this.scene.add(this.meshEditor.selectedFacesMeshes);
+
+
     }
 
     warp()
