@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import LinearAlgebra from './linearAlgebra';
-import {cloneVertices,isBorderEdge,createTrianglesFromFaces} from './extras'
-import {Edge} from './edge'
+import { cloneVertices, isBorderEdge, createTrianglesFromFaces } from './extras'
+import { Edge } from './edge'
+import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js';
 
 // var camera, scene, renderer, mesh;
 // var origin = new THREE.Vector3(0, 0, 0);
@@ -42,7 +43,7 @@ export default class ASAP
 
         this.clickedOnHandle = false
 
-        this.LinearAlgebra = new LinearAlgebra();
+        this.LinearAlgebra = new LinearAlgebra(this.deformedVertices);
         console.log( "test" )
     }
 
@@ -295,39 +296,44 @@ export default class ASAP
         }
     }
 
-    mouseMove(event){
-      if (this.keyFrameMode) {
-        console.log('Viewing Keyframe. Please click "Reset" to start again.');
-        return false;
-      }
-
-      if (this.clickedOnHandle) {
-        var x = event.clientX;
-        var y = event.clientY;
-        var mouseTarget = this.getPointInWorldCoordinates(x, y);
-
-        //this will update handles[i] element that is selectedHandle
-        this.selectedHandle.position.x = mouseTarget.x;
-        this.selectedHandle.position.y = mouseTarget.y;
-
-        // model might not have loaded so might need to moved listeners to after the 
-        // model has loaded
-        let newVertices = this.LinearAlgebra.manipulation(this.handles, this.edges, this.originalVertices);
-        for (var i = 0; i < newVertices.length; i++) {
-            this.model.geometry.vertices[i].x = newVertices[i].x;
-            this.model.geometry.vertices[i].y = newVertices[i].y;
+    mouseMove( event )
+    {
+        if ( this.keyFrameMode )
+        {
+            console.log( 'Viewing Keyframe. Please click "Reset" to start again.' );
+            return false;
         }
 
-        this.model.geometry.verticesNeedUpdate = true;
-        this.updateScene();
-      }
+        if ( this.clickedOnHandle )
+        {
+            var x = event.clientX;
+            var y = event.clientY;
+            var mouseTarget = this.getPointInWorldCoordinates( x, y );
+
+            //this will update handles[i] element that is selectedHandle
+            this.selectedHandle.position.x = mouseTarget.x;
+            this.selectedHandle.position.y = mouseTarget.y;
+
+            // model might not have loaded so might need to moved listeners to after the 
+            // model has loaded
+            let newVertices = this.LinearAlgebra.manipulation( this.handles, this.edges, this.originalVertices );
+            for ( var i = 0; i < newVertices.length; i++ )
+            {
+                this.model.geometry.vertices[ i ].x = newVertices[ i ].x;
+                this.model.geometry.vertices[ i ].y = newVertices[ i ].y;
+            }
+
+            this.model.geometry.verticesNeedUpdate = true;
+            this.updateScene();
+        }
     }
 
-    mouseUp(event)
+    mouseUp( event )
     {
-      if (this.clickedOnHandle) {
-        this.clickedOnHandle = false;
-      }
+        if ( this.clickedOnHandle )
+        {
+            this.clickedOnHandle = false;
+        }
     }
 
     // updateFrameListeners() {
@@ -368,13 +374,12 @@ export default class ASAP
     //   location.reload();
     // }
 
-     setWeight(weight){
-      this.w = weight;
+    setWeight( weight )
+    {
+        this.w = weight;
     }
 
-
-
-    // function loadObj(objPath) {
+    // loadObj(objPath) {
     //   var loader = new THREE.OBJLoader();
     //   loader.load(
     //     objPath,
@@ -398,41 +403,59 @@ export default class ASAP
     //   );
     // };
 
-    initializeFromMesh( mesh )
+    async initializeFromMesh( mesh )
     {
-        this.faces = mesh.geometry.faces;
-        for ( var i = 0; i < this.faces.length; i++ )
+        for ( let f_iter = mesh.triMesh.faces_begin(); f_iter.idx() !== mesh.triMesh.faces_end().idx(); f_iter.next() )
         {
-            var currentEdge1 = new Edge( this.faces[ i ].a, this.faces[ i ].b, i );
-            var currentEdge2 = new Edge( this.faces[ i ].b, this.faces[ i ].c, i );
-            var currentEdge3 = new Edge( this.faces[ i ].a, this.faces[ i ].c, i );
-
-            if ( !Edge.edgeDoesExist( this.edges, currentEdge1 ) ) { this.edges.push( currentEdge1 ); }
-            if ( !Edge.edgeDoesExist( this.edges, currentEdge2 ) ) { this.edges.push( currentEdge2 ); }
-            if ( !Edge.edgeDoesExist( this.edges, currentEdge3 ) ) { this.edges.push( currentEdge3 ); }
+            const vertexIDs = [];
+            let fv_iter = mesh.triMesh.fv_cwiter(f_iter.handle());
+            vertexIDs.push(fv_iter.handle().idx());
+            await fv_iter.next();
+            vertexIDs.push(fv_iter.handle().idx());
+            await fv_iter.next();
+            vertexIDs.push(fv_iter.handle().idx());
+            console.log("faceid",f_iter.handle().idx());
+            console.log("vertexids",vertexIDs);
         }
 
-        for ( var i = 0; i < this.edges.length; i++ )
-        {
-            if ( isBorderEdge( this.edges[ i ], this.faces ) )
-            {
-                this.edges[ i ].setIsBorderEdge( true );
-            } else
-            {
-                this.dges[ i ].setIsBorderEdge( false );
-            }
-        }
+        console.log(mesh);
+        const test = new Geometry().fromBufferGeometry(mesh.geometry);
+        console.log(test);
 
-        var allEdges = Edge.getAllEdges( this.faces );
-        for ( var i = 0; i < this.edges.length; i++ )
-        {
-            var neighbors = Edge.getEdgeNeighbors( this.edges[ i ], allEdges, this.faces );
-            this.edges[ i ].setNeighbors( neighbors );
-        }
+        // this.faces = mesh.geometry.faces;
+        // for ( var i = 0; i < this.faces.length; i++ )
+        // {
+        //     var currentEdge1 = new Edge( this.faces[ i ].a, this.faces[ i ].b, i );
+        //     var currentEdge2 = new Edge( this.faces[ i ].b, this.faces[ i ].c, i );
+        //     var currentEdge3 = new Edge( this.faces[ i ].a, this.faces[ i ].c, i );
 
-        this.originalVertices = cloneVertices( this.model.geometry.vertices );
-        this.deformedVertices = cloneVertices( this.model.geometry.vertices );
-        this.LinearAlgebra.registration( this.dges, this.originalVertices );
+        //     if ( !Edge.edgeDoesExist( this.edges, currentEdge1 ) ) { this.edges.push( currentEdge1 ); }
+        //     if ( !Edge.edgeDoesExist( this.edges, currentEdge2 ) ) { this.edges.push( currentEdge2 ); }
+        //     if ( !Edge.edgeDoesExist( this.edges, currentEdge3 ) ) { this.edges.push( currentEdge3 ); }
+        // }
+
+        // for ( var i = 0; i < this.edges.length; i++ )
+        // {
+        //     if ( isBorderEdge( this.edges[ i ], this.faces ) )
+        //     {
+        //         this.edges[ i ].setIsBorderEdge( true );
+        //     } 
+        //     else
+        //     {
+        //         this.dges[ i ].setIsBorderEdge( false );
+        //     }
+        // }
+
+        // var allEdges = Edge.getAllEdges( this.faces );
+        // for ( var i = 0; i < this.edges.length; i++ )
+        // {
+        //     var neighbors = Edge.getEdgeNeighbors( this.edges[ i ], allEdges, this.faces );
+        //     this.edges[ i ].setNeighbors( neighbors );
+        // }
+
+        // this.originalVertices = cloneVertices( this.model.geometry.vertices );
+        // this.deformedVertices = cloneVertices( this.model.geometry.vertices );
+        // this.LinearAlgebra.registration( this.dges, this.originalVertices );
     }
 
     createHandleAtVertex( index, vertices )
@@ -461,7 +484,7 @@ export default class ASAP
 
     createHandleAtPosition( worldPos, faces, vertices )
     {
-        var triangles = createTrianglesFromFaces(this.model.geometry.faces, vertices );
+        var triangles = createTrianglesFromFaces( this.model.geometry.faces, vertices );
         var newHandle = null;
         var uniformScale = this.cameraPosition.z / 120;
         for ( var i = 0; i < triangles.length; i++ )

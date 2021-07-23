@@ -74,7 +74,8 @@ export default class Viewer
         this.meshEditor.load(this.testMesh, this.testMesh.verticesPoints, this.testMesh.triMesh);
         this.scene.add(this.meshEditor.selectedFacesMeshes);
 
-
+        //asap test
+        this.ASAP.initializeFromMesh(this.testMesh);
     }
 
     warp()

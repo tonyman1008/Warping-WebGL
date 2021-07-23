@@ -39,7 +39,7 @@ export default class ObjectManager
 
     public async createGridMesh(testImgPath, blendColor)
     {
-        const geo = new THREE.PlaneBufferGeometry(100, 100, 30, 30);
+        const geo = new THREE.PlaneBufferGeometry(100, 100, 5, 5);
 
         const textureMap = await this.textureLoader.loadAsync(testImgPath);
         textureMap.wrapS = THREE.RepeatWrapping;
@@ -80,9 +80,9 @@ export default class ObjectManager
         // make sure the obj format is only the target mesh
         const secondObjTagFormatIndex = originObjFormat.indexOf('o ', 1);
         const removeChildrenObjFormat = originObjFormat.substring(0, secondObjTagFormatIndex)
-
+        console.log(removeChildrenObjFormat);
         const meshConnectivity = await this.openMeshController.read(removeChildrenObjFormat, customtriMesh);
-        console.log("meshConnectivity", meshConnectivity);
+
         return meshConnectivity
     }
 

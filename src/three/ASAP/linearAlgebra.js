@@ -18,7 +18,7 @@ import { getVertex } from './extras';
 
 export default class LinearAlgebra
 {
-  constructor(iExtraFunc)
+  constructor(iDeformedVertices)
   {
     this.Gks = [];
     this.GkTerms = [];
@@ -34,7 +34,7 @@ export default class LinearAlgebra
     this.A1Term = null;
     this.A2Term = null;
     this.w = 1000;
-    this.extraFunc = iExtraFunc;
+    this.deformedVertices = iDeformedVertices;
   }
 
   registration( edges, vertices )
@@ -119,8 +119,8 @@ export default class LinearAlgebra
 
   getHkFromEdge( edge, vertices, gkTerm )
   {
-    var edgeStartVertex = this.extraFunc.getVertex( edge.start, vertices );
-    var edgeEndVertex = this.extraFunc.getVertex( edge.end, vertices );
+    var edgeStartVertex = getVertex( edge.start, vertices );
+    var edgeEndVertex = getVertex( edge.end, vertices );
     var ekx = edgeEndVertex.x - edgeStartVertex.x;
     var eky = edgeEndVertex.y - edgeStartVertex.y;
     var ekxyTerm = math.matrix( [ [ ekx, eky ], [ eky, -ekx ] ] );
@@ -158,124 +158,124 @@ export default class LinearAlgebra
     return L1;
   }
 
-  // function buildL2( edges )
-  // {
-  //   var L2 = math.matrix();
-  //   for ( var i = 0; i < edges.length; i++ )
-  //   {
-  //     L2.set( [ i, edges[ i ].end ], 1 );
-  //     L2.set( [ i, edges[ i ].start ], -1 );
-  //   }
-  //   return L2;
-  // }
+  buildL2( edges )
+  {
+    var L2 = math.matrix();
+    for ( var i = 0; i < this.edges.length; i++ )
+    {
+      L2.set( [ i, edges[ i ].end ], 1 );
+      L2.set( [ i, edges[ i ].start ], -1 );
+    }
+    return L2;
+  }
 
-  // function manipulation( handles, edges, origVertices )
-  // {
-  //   var b1 = buildB1( handles, edges );
-  //   var similarityTransformResult = similarityTransform( b1 );
+  manipulation( handles, edges, origVertices )
+  {
+    var b1 = this.buildB1( handles, edges );
+    var similarityTransformResult = this.similarityTransform( b1 );
 
-  //   var b2x = buildB2( handles, edges, similarityTransformResult, origVertices, 'x' );
-  //   var b2y = buildB2( handles, edges, similarityTransformResult, origVertices, 'y' );
+    var b2x = this.buildB2( handles, edges, similarityTransformResult, origVertices, 'x' );
+    var b2y = this.buildB2( handles, edges, similarityTransformResult, origVertices, 'y' );
 
-  //   var scaleAdjustmentResult = scaleAdjustmentRenameMe( b2x, b2y );
+    var scaleAdjustmentResult = this.scaleAdjustmentRenameMe( b2x, b2y );
 
-  //   return scaleAdjustmentResult;
-  // }
+    return scaleAdjustmentResult;
+  }
 
-  // function similarityTransform( b1 )
-  // {
-  //   b1 = new Matrix( b1.toArray() );
-  //   var res = A1Term.multiply( b1 );
+  similarityTransform( b1 )
+  {
+    b1 = new Matrix( b1.toArray() );
+    var res = this.A1Term.multiply( b1 );
 
-  //   for ( var i = 0; i < deformedVertices.length; i++ )
-  //   {
-  //     deformedVertices[ i ].x = res.get( 2 * i, 0 );
-  //     deformedVertices[ i ].y = res.get( 2 * i + 1, 0 );
-  //   }
-  //   return deformedVertices;
-  // }
+    for ( var i = 0; i < this.deformedVertices.length; i++ )
+    {
+      this.deformedVertices[ i ].x = res.get( 2 * i, 0 );
+      this.deformedVertices[ i ].y = res.get( 2 * i + 1, 0 );
+    }
+    return this.deformedVertices;
+  }
 
-  // function scaleAdjustmentRenameMe( b2x, b2y )
-  // {
-  //   b2x = new Matrix( b2x.toArray() );
-  //   b2y = new Matrix( b2y.toArray() );
-  //   var resx = A2Term.multiply( b2x );
-  //   var resy = A2Term.multiply( b2y );
+  scaleAdjustmentRenameMe( b2x, b2y )
+  {
+    b2x = new Matrix( b2x.toArray() );
+    b2y = new Matrix( b2y.toArray() );
+    var resx = this.A2Term.multiply( b2x );
+    var resy = this.A2Term.multiply( b2y );
 
-  //   for ( var i = 0; i < deformedVertices.length; i++ )
-  //   {
-  //     deformedVertices[ i ].x = resx.get( i, 0 );
-  //     deformedVertices[ i ].y = resy.get( i, 0 );
-  //   }
-  //   return deformedVertices;
-  // }
+    for ( var i = 0; i < this.deformedVertices.length; i++ )
+    {
+      this.deformedVertices[ i ].x = resx.get( i, 0 );
+      this.deformedVertices[ i ].y = resy.get( i, 0 );
+    }
+    return this.deformedVertices;
+  }
 
-  // function buildB1( handles, edges )
-  // {
-  //   var b1EdgeVectors = math.matrix( math.zeros( [ edges.length * 2, 1 ] ) );
-  //   var b1Handles = math.matrix();
-  //   var b1 = math.matrix();
-  //   for ( var i = 0; i < handles.length; i++ )
-  //   {
-  //     b1Handles.set( [ 2 * i, 0 ], w * handles[ i ].position.x );
-  //     b1Handles.set( [ 2 * i + 1, 0 ], w * handles[ i ].position.y );
-  //   }
-  //   b1 = math.concat( b1EdgeVectors, b1Handles, 0 );
+  buildB1( handles, edges )
+  {
+    var b1EdgeVectors = math.matrix( math.zeros( [ edges.length * 2, 1 ] ) );
+    var b1Handles = math.matrix();
+    var b1 = math.matrix();
+    for ( var i = 0; i < handles.length; i++ )
+    {
+      b1Handles.set( [ 2 * i, 0 ], this.w * handles[ i ].position.x );
+      b1Handles.set( [ 2 * i + 1, 0 ], this.w * handles[ i ].position.y );
+    }
+    b1 = math.concat( b1EdgeVectors, b1Handles, 0 );
 
-  //   return b1;
-  // }
+    return b1;
+  }
 
-  // function buildB2( handles, edges, newVertices, origVertices, axis )
-  // {
-  //   var axis = ( axis == 'x' ? 0 : 1 );
-  //   var b2EdgeVectors = math.matrix();
-  //   var b2Handles = math.matrix();
-  //   var b2 = math.matrix();
-  //   var Tks = getTks( edges, Gks, newVertices );
+  buildB2( handles, edges, newVertices, origVertices, axis )
+  {
+    var axis = ( axis == 'x' ? 0 : 1 );
+    var b2EdgeVectors = math.matrix();
+    var b2Handles = math.matrix();
+    var b2 = math.matrix();
+    var Tks = this.getTks( edges, this.Gks, newVertices );
 
-  //   for ( var i = 0; i < edges.length; i++ )
-  //   {
-  //     var ek = getEdgeVectorFromEdge( edges[ i ], origVertices );
-  //     b2EdgeVectors.set( [ i, 0 ], math.multiply( Tks[ i ], ek ).get( [ axis, 0 ] ) );
-  //   }
+    for ( var i = 0; i < edges.length; i++ )
+    {
+      var ek = this.getEdgeVectorFromEdge( edges[ i ], origVertices );
+      b2EdgeVectors.set( [ i, 0 ], math.multiply( Tks[ i ], ek ).get( [ axis, 0 ] ) );
+    }
 
-  //   for ( var i = 0; i < handles.length; i++ )
-  //   {
-  //     b2Handles.set( [ i, 0 ], ( axis == 0 ? w * handles[ i ].position.x : w * handles[ i ].position.y ) )
-  //   }
+    for ( var i = 0; i < handles.length; i++ )
+    {
+      b2Handles.set( [ i, 0 ], ( axis == 0 ? this.w * handles[ i ].position.x : this.w * handles[ i ].position.y ) )
+    }
 
-  //   b2 = math.concat( b2EdgeVectors, b2Handles, 0 );
+    b2 = math.concat( b2EdgeVectors, b2Handles, 0 );
 
-  //   return b2;
-  // }
+    return b2;
+  }
 
-  // function getTks( edges, Gks, vertices )
-  // {
-  //   var Tks = [];
-  //   for ( var i = 0; i < edges.length; i++ )
-  //   {
-  //     var edgeNeighbors = math.matrix();
-  //     for ( var k = 0; k < edges[ i ].neighbors.length; k++ )
-  //     {
-  //       edgeNeighbors.set( [ 2 * k, 0 ], getVertex( edges[ i ].neighbors[ k ], vertices ).x );
-  //       edgeNeighbors.set( [ 2 * k + 1, 0 ], getVertex( edges[ i ].neighbors[ k ], vertices ).y );
-  //     }
+  getTks( edges, Gks, vertices )
+  {
+    var Tks = [];
+    for ( var i = 0; i < edges.length; i++ )
+    {
+      var edgeNeighbors = math.matrix();
+      for ( var k = 0; k < edges[ i ].neighbors.length; k++ )
+      {
+        edgeNeighbors.set( [ 2 * k, 0 ], getVertex( edges[ i ].neighbors[ k ], vertices ).x );
+        edgeNeighbors.set( [ 2 * k + 1, 0 ], getVertex( edges[ i ].neighbors[ k ], vertices ).y );
+      }
 
-  //     var gkTerm = GkTerms[ i ];
-  //     let gkTermTopTwoRows = math.eval( 'gkTerm[1:2,:]', {
-  //       gkTerm,
-  //     } );
+      var gkTerm = this.GkTerms[ i ];
+      let gkTermTopTwoRows = math.evaluate( 'gkTerm[1:2,:]', {
+        gkTerm,
+      } );
 
-  //     var cksk = math.multiply( gkTermTopTwoRows, edgeNeighbors );
-  //     var ck = cksk.get( [ 0, 0 ] );
-  //     var sk = cksk.get( [ 1, 0 ] );
-  //     var Tk = math.matrix( [ [ ck, sk ], [ -sk, ck ] ] );
-  //     var normalizationTerm = math.sqrt( math.add( math.square( ck ), math.square( sk ) ) );
-  //     Tk = math.dotDivide( Tk, normalizationTerm );
-  //     Tks.push( Tk );
-  //   }
-  //   return Tks;
-  // }
+      var cksk = math.multiply( gkTermTopTwoRows, edgeNeighbors );
+      var ck = cksk.get( [ 0, 0 ] );
+      var sk = cksk.get( [ 1, 0 ] );
+      var Tk = math.matrix( [ [ ck, sk ], [ -sk, ck ] ] );
+      var normalizationTerm = math.sqrt( math.add( math.square( ck ), math.square( sk ) ) );
+      Tk = math.dotDivide( Tk, normalizationTerm );
+      Tks.push( Tk );
+    }
+    return Tks;
+  }
 
   getGkMatrix( edge, vertices, includeTranslation )
   {
