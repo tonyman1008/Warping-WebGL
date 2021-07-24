@@ -64,7 +64,6 @@ function getEdgeVectorFromEdge(edge,vertices){
 function isBorderEdge(edge,faces){
   var isBorderEdge = null;
   var count = 0;
-  
   for (var i = 0; i < faces.length; i++) {
     var edge1 = new Edge(faces[i].a,faces[i].b,i);
     var edge2 = new Edge(faces[i].b,faces[i].c,i);

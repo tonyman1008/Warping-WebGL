@@ -28,7 +28,7 @@ export default class ASAP
         this.renderer = iRenderer
         this.mesh = null;
         this.origin = new THREE.Vector3( 0, 0, 0 );
-        this.cameraPosition = new THREE.Vector3( 0, 0, 4 );
+        this.cameraPosition = new THREE.Vector3( 0, 0, 150);
         this.model = null;
         this.handles = [];
         this.edges = [];
@@ -43,8 +43,9 @@ export default class ASAP
 
         this.clickedOnHandle = false
 
-        this.LinearAlgebra = new LinearAlgebra(this.deformedVertices);
-        console.log( "test" )
+        this.LinearAlgebra = new LinearAlgebra();
+        this.attachEvent();
+        console.log( "ASAP class init" )
     }
 
     contextMenu( event )
@@ -70,7 +71,8 @@ export default class ASAP
                 this.handles.splice( nearestHandleIndex, 1 );
                 // $('.infoText').text('Compilation started! Removing marker! Please Wait..');
                 console.log( 'Compilation started! Removing marker! Please Wait..' );
-                setTimeout( function ()
+                console.log(this.LinearAlgebra)
+                setTimeout( ()=>
                 {
                     this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
                         function ()
@@ -226,7 +228,7 @@ export default class ASAP
 
     mouseClick_left( event )
     {
-        var leftClicked = event.which == 1 ? true : false;
+        var leftClicked = event.button == 0 ? true : false;
         if ( leftClicked )
         {
             var x = event.clientX;
@@ -249,17 +251,19 @@ export default class ASAP
                     newHandle = this.createHandleAtPosition( worldPos, this.model.geometry.faces, this.deformedVertices );
                     this.handles.push( newHandle );
                     console.log( 'Compilation started! Adding marker! Please Wait..' );
-                    setTimeout( function ()
+                    //TODO: chnage set time out
+                    setTimeout( ()=>
                     {
                         this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-                            function ()
+                            ()=>
                             {
                                 console.log( 'Compilation finished! Can drag model!' );
                                 this.drawHandle( newHandle );
                             } );
                     }, 20 );
                 }
-            } else
+            }
+            else
             {
                 var nearestVertex = null;
                 var nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
@@ -277,16 +281,17 @@ export default class ASAP
                         newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
                         this.handles.push( newHandle );
                         console.log( 'Compilation started! Adding marker! Please Wait..' );
-                        setTimeout( function ()
+                        setTimeout( ()=>
                         {
                             this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-                                function ()
+                                ()=>
                                 {
                                     console.log( 'Compilation finished! Can drag model!' );
                                     this.drawHandle( newHandle );
                                 } );
                         }, 20 );
-                    } else
+                    } 
+                    else
                     {
                         console.log( 'No vertex found!' );
                     }
@@ -317,19 +322,23 @@ export default class ASAP
             // model might not have loaded so might need to moved listeners to after the 
             // model has loaded
             let newVertices = this.LinearAlgebra.manipulation( this.handles, this.edges, this.originalVertices );
+            console.log(newVertices);
             for ( var i = 0; i < newVertices.length; i++ )
             {
-                this.model.geometry.vertices[ i ].x = newVertices[ i ].x;
-                this.model.geometry.vertices[ i ].y = newVertices[ i ].y;
+                this.model.geometry.attributes.position.setXY(3*i, newVertices[ i ].x, newVertices[ i ].y);
+
+                // this.model.geometry.vertices[ i ].x = newVertices[ i ].x;
+                // this.model.geometry.vertices[ i ].y = newVertices[ i ].y;
             }
 
-            this.model.geometry.verticesNeedUpdate = true;
+            this.model.geometry.attributes.position.needsUpdate = true;
             this.updateScene();
         }
     }
 
     mouseUp( event )
     {
+        console.log("mouse up")
         if ( this.clickedOnHandle )
         {
             this.clickedOnHandle = false;
@@ -405,57 +414,63 @@ export default class ASAP
 
     async initializeFromMesh( mesh )
     {
-        for ( let f_iter = mesh.triMesh.faces_begin(); f_iter.idx() !== mesh.triMesh.faces_end().idx(); f_iter.next() )
+        // for ( let f_iter = mesh.triMesh.faces_begin(); f_iter.idx() !== mesh.triMesh.faces_end().idx(); f_iter.next() )
+        // {
+        //     const vertexIDs = [];
+        //     let fv_iter = mesh.triMesh.fv_cwiter(f_iter.handle());
+        //     vertexIDs.push(fv_iter.handle().idx());
+        //     await fv_iter.next();
+        //     vertexIDs.push(fv_iter.handle().idx());
+        //     await fv_iter.next();
+        //     vertexIDs.push(fv_iter.handle().idx());
+        //     console.log("faceid",f_iter.handle().idx());
+        //     console.log("vertexids",vertexIDs);
+        // }
+
+        console.log( mesh );
+
+        this.model = mesh;
+        // ***this geometry structure is deprecated after v125 threejs test
+        // ###deprecated
+        const testGeometry = new Geometry().fromBufferGeometry( mesh.geometry );
+
+        this.faces = testGeometry.faces;
+        // this.faces = mesh.geometry.faces;
+        for ( var i = 0; i < this.faces.length; i++ )
         {
-            const vertexIDs = [];
-            let fv_iter = mesh.triMesh.fv_cwiter(f_iter.handle());
-            vertexIDs.push(fv_iter.handle().idx());
-            await fv_iter.next();
-            vertexIDs.push(fv_iter.handle().idx());
-            await fv_iter.next();
-            vertexIDs.push(fv_iter.handle().idx());
-            console.log("faceid",f_iter.handle().idx());
-            console.log("vertexids",vertexIDs);
+            var currentEdge1 = new Edge( this.faces[ i ].a, this.faces[ i ].b, i );
+            var currentEdge2 = new Edge( this.faces[ i ].b, this.faces[ i ].c, i );
+            var currentEdge3 = new Edge( this.faces[ i ].a, this.faces[ i ].c, i );
+            if ( !Edge.edgeDoesExist( this.edges, currentEdge1 ) ) { this.edges.push( currentEdge1 ); }
+            if ( !Edge.edgeDoesExist( this.edges, currentEdge2 ) ) { this.edges.push( currentEdge2 ); }
+            if ( !Edge.edgeDoesExist( this.edges, currentEdge3 ) ) { this.edges.push( currentEdge3 ); }
         }
 
-        console.log(mesh);
-        const test = new Geometry().fromBufferGeometry(mesh.geometry);
-        console.log(test);
+        for ( var i = 0; i < this.edges.length; i++ )
+        {
+            if ( isBorderEdge( this.edges[ i ], this.faces ) )
+            {
+                this.edges[ i ].setIsBorderEdge( true );
+            }
+            else
+            {
+                this.edges[ i ].setIsBorderEdge( false );
+            }
+        }
 
-        // this.faces = mesh.geometry.faces;
-        // for ( var i = 0; i < this.faces.length; i++ )
-        // {
-        //     var currentEdge1 = new Edge( this.faces[ i ].a, this.faces[ i ].b, i );
-        //     var currentEdge2 = new Edge( this.faces[ i ].b, this.faces[ i ].c, i );
-        //     var currentEdge3 = new Edge( this.faces[ i ].a, this.faces[ i ].c, i );
+        var allEdges = Edge.getAllEdges( this.faces );
+        for ( var i = 0; i < this.edges.length; i++ )
+        {
+            var neighbors = Edge.getEdgeNeighbors( this.edges[ i ], allEdges, this.faces );
+            this.edges[ i ].setNeighbors( neighbors );
+        }
 
-        //     if ( !Edge.edgeDoesExist( this.edges, currentEdge1 ) ) { this.edges.push( currentEdge1 ); }
-        //     if ( !Edge.edgeDoesExist( this.edges, currentEdge2 ) ) { this.edges.push( currentEdge2 ); }
-        //     if ( !Edge.edgeDoesExist( this.edges, currentEdge3 ) ) { this.edges.push( currentEdge3 ); }
-        // }
-
-        // for ( var i = 0; i < this.edges.length; i++ )
-        // {
-        //     if ( isBorderEdge( this.edges[ i ], this.faces ) )
-        //     {
-        //         this.edges[ i ].setIsBorderEdge( true );
-        //     } 
-        //     else
-        //     {
-        //         this.dges[ i ].setIsBorderEdge( false );
-        //     }
-        // }
-
-        // var allEdges = Edge.getAllEdges( this.faces );
-        // for ( var i = 0; i < this.edges.length; i++ )
-        // {
-        //     var neighbors = Edge.getEdgeNeighbors( this.edges[ i ], allEdges, this.faces );
-        //     this.edges[ i ].setNeighbors( neighbors );
-        // }
-
+        // ###deprecated
+        this.originalVertices = cloneVertices( testGeometry.vertices );
+        this.deformedVertices = cloneVertices( testGeometry.vertices );
         // this.originalVertices = cloneVertices( this.model.geometry.vertices );
         // this.deformedVertices = cloneVertices( this.model.geometry.vertices );
-        // this.LinearAlgebra.registration( this.dges, this.originalVertices );
+        this.LinearAlgebra.registration( this.edges, this.originalVertices,this.deformedVertices );
     }
 
     createHandleAtVertex( index, vertices )
@@ -531,6 +546,13 @@ export default class ASAP
         }
 
         return newHandle;
+    }
+
+    attachEvent()
+    {
+        document.addEventListener( "mousedown", this.mouseClick_left.bind(this));
+        document.addEventListener( "mouseup", this.mouseUp.bind(this));
+        document.addEventListener( "mousemove", this.mouseMove.bind(this));
     }
 
     updateScene()

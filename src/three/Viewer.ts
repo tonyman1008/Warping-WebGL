@@ -35,6 +35,7 @@ export default class Viewer
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
         this.viewportControls.camera.position.set(0, 0, 150)
+        this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();
         this.meshEditor = new MeshEditor(this.viewportControls.camera);

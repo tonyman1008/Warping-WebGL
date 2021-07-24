@@ -1,6 +1,6 @@
 import * as math from 'mathjs';
-import { Matrix } from 'vectorious';
-import { getVertex } from './extras';
+// import { NDArray } from 'vectorious';
+import { getVertex,getEdgeVectorFromEdge } from './extras';
 // var Gks = [];
 // var GkTerms = [];
 // var Hks = [];
@@ -18,7 +18,7 @@ import { getVertex } from './extras';
 
 export default class LinearAlgebra
 {
-  constructor(iDeformedVertices)
+  constructor( )
   {
     this.Gks = [];
     this.GkTerms = [];
@@ -34,11 +34,14 @@ export default class LinearAlgebra
     this.A1Term = null;
     this.A2Term = null;
     this.w = 1000;
-    this.deformedVertices = iDeformedVertices;
+    this.deformedVertices = [];
   }
 
-  registration( edges, vertices )
+  registration( edges, vertices,deformedVertices )
   {
+    // add
+    this.deformedVertices = deformedVertices;
+
     var gk, hk, gkTerm = null;
     for ( var i = 0; i < edges.length; i++ )
     {
@@ -61,11 +64,21 @@ export default class LinearAlgebra
 
     this.A1 = math.concat( this.L1, this.C1, 0 );
     this.A2 = math.concat( this.L2, this.C2, 0 );
+    console.log( this.A1.toArray() );
+    this.A1 = math.matrix( this.A1.toArray() );
+    this.A2 = math.matrix( this.A2.toArray() );
+    console.log( this.A1 );
 
-    this.A1 = new Matrix( this.A1.toArray() );
-    this.A2 = new Matrix( this.A2.toArray() );
-    this.A1Term = ( this.A1.transpose().multiply( this.A1 ) ).inverse().multiply( this.A1.transpose() );
-    this.A2Term = ( this.A2.transpose().multiply( this.A2 ) ).inverse().multiply( this.A2.transpose() );
+    const A1_Transpose = math.transpose( this.A1 );
+    const A2_Transpose = math.transpose( this.A2 );
+    this.A1Term = math.multiply( math.inv( math.multiply( A1_Transpose, this.A1 ) ), A1_Transpose )
+    this.A2Term = math.multiply( math.inv( math.multiply( A2_Transpose, this.A2 ) ), A2_Transpose )
+    // this.A1Term = ( A1_Transpose.multiply( this.A1 ) ).inv().multiply( A1_Transpose );
+    // this.A2Term = ( A2_Transpose.multiply( this.A2 ) ).inv().multiply( A2_Transpose );
+
+    //syntax ?
+    // A1Term = (A1.transpose().multiply(A1)).inverse().multiply(A1.transpose());
+    // A2Term = (A2.transpose().multiply(A2)).inverse().multiply(A2.transpose());
 
     _callback();
   }
@@ -161,7 +174,7 @@ export default class LinearAlgebra
   buildL2( edges )
   {
     var L2 = math.matrix();
-    for ( var i = 0; i < this.edges.length; i++ )
+    for ( var i = 0; i < edges.length; i++ )
     {
       L2.set( [ i, edges[ i ].end ], 1 );
       L2.set( [ i, edges[ i ].start ], -1 );
@@ -184,28 +197,36 @@ export default class LinearAlgebra
 
   similarityTransform( b1 )
   {
-    b1 = new Matrix( b1.toArray() );
-    var res = this.A1Term.multiply( b1 );
-
+    b1 = math.matrix( b1.toArray() );
+    var res = math.multiply( this.A1Term, b1 );
+    // var res = this.A1Term.multiply( b1 );
+    console.log(res);
+    console.log(this.deformedVertices);
     for ( var i = 0; i < this.deformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = res.get( 2 * i, 0 );
-      this.deformedVertices[ i ].y = res.get( 2 * i + 1, 0 );
+      this.deformedVertices[ i ].x = math.subset(res,math.index(2*i,0));
+      this.deformedVertices[ i ].y = math.subset(res,math.index(2*i+1,0));
+      // this.deformedVertices[ i ].x = res.get( 2 * i, 0 );
+      // this.deformedVertices[ i ].y = res.get( 2 * i + 1, 0 );
     }
     return this.deformedVertices;
   }
 
   scaleAdjustmentRenameMe( b2x, b2y )
   {
-    b2x = new Matrix( b2x.toArray() );
-    b2y = new Matrix( b2y.toArray() );
-    var resx = this.A2Term.multiply( b2x );
-    var resy = this.A2Term.multiply( b2y );
+    b2x = math.matrix( b2x.toArray() );
+    b2y = math.matrix( b2y.toArray() );
+    var resx = math.multiply( this.A2Term, b2x );
+    var resy = math.multiply( this.A2Term, b2y );
+    // var resx = this.A2Term.multiply( b2x );
+    // var resy = this.A2Term.multiply( b2y );
 
     for ( var i = 0; i < this.deformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = resx.get( i, 0 );
-      this.deformedVertices[ i ].y = resy.get( i, 0 );
+      this.deformedVertices[ i ].x = math.subset(resx,math.index(i,0))
+      this.deformedVertices[ i ].y = math.subset(resy,math.index(i,0))
+      // this.deformedVertices[ i ].x = resx.get( i, 0 );
+      // this.deformedVertices[ i ].y = resy.get( i, 0 );
     }
     return this.deformedVertices;
   }
@@ -235,7 +256,7 @@ export default class LinearAlgebra
 
     for ( var i = 0; i < edges.length; i++ )
     {
-      var ek = this.getEdgeVectorFromEdge( edges[ i ], origVertices );
+      var ek = getEdgeVectorFromEdge( edges[ i ], origVertices );
       b2EdgeVectors.set( [ i, 0 ], math.multiply( Tks[ i ], ek ).get( [ axis, 0 ] ) );
     }
 

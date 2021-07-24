@@ -64,7 +64,7 @@ export default class MeshEditor
     this.pointScale = 1;
     const pointsGeometry = points.geometry as THREE.BufferGeometry;
     this.initPointsColor = Array.from(pointsGeometry.getAttribute("color").array);
-    this.attachPointerEvent();
+    // this.attachPointerEvent();
   }
 
   setVertexColor(vertexHandles: VertexHandle[], color: THREE.Color)
