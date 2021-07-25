@@ -4,20 +4,6 @@ import { cloneVertices, isBorderEdge, createTrianglesFromFaces } from './extras'
 import { Edge } from './edge'
 import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js';
 
-// var camera, scene, renderer, mesh;
-// var origin = new THREE.Vector3(0, 0, 0);
-// var cameraPosition = new THREE.Vector3(0, 0, 4);
-// var model = null;
-// var handles = [];
-// var edges = [];
-// var frames = [];
-// var noFrame = 1;
-// var keyFrameMode = false;
-// var selectedHandle = null;
-// var originalVertices = null;
-// var deformedVertices = null;
-// var barycentricCoordMode = false;
-
 export default class ASAP
 {
 
@@ -28,7 +14,7 @@ export default class ASAP
         this.renderer = iRenderer
         this.mesh = null;
         this.origin = new THREE.Vector3( 0, 0, 0 );
-        this.cameraPosition = new THREE.Vector3( 0, 0, 150);
+        this.cameraPosition = new THREE.Vector3( 0, 0, 150 );
         this.model = null;
         this.handles = [];
         this.edges = [];
@@ -40,7 +26,7 @@ export default class ASAP
         this.originalVertices = null;
         this.deformedVertices = null;
         this.barycentricCoordMode = false;
-
+        this.w = 1000;
         this.clickedOnHandle = false
 
         this.LinearAlgebra = new LinearAlgebra();
@@ -71,8 +57,8 @@ export default class ASAP
                 this.handles.splice( nearestHandleIndex, 1 );
                 // $('.infoText').text('Compilation started! Removing marker! Please Wait..');
                 console.log( 'Compilation started! Removing marker! Please Wait..' );
-                console.log(this.LinearAlgebra)
-                setTimeout( ()=>
+                console.log( this.LinearAlgebra )
+                setTimeout( () =>
                 {
                     this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
                         function ()
@@ -147,7 +133,6 @@ export default class ASAP
                 break;
             }
         }
-        this.updateScene();
     }
 
     getHandleBaryCentricMode( index )
@@ -252,10 +237,10 @@ export default class ASAP
                     this.handles.push( newHandle );
                     console.log( 'Compilation started! Adding marker! Please Wait..' );
                     //TODO: chnage set time out
-                    setTimeout( ()=>
+                    setTimeout( () =>
                     {
                         this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-                            ()=>
+                            () =>
                             {
                                 console.log( 'Compilation finished! Can drag model!' );
                                 this.drawHandle( newHandle );
@@ -281,16 +266,16 @@ export default class ASAP
                         newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
                         this.handles.push( newHandle );
                         console.log( 'Compilation started! Adding marker! Please Wait..' );
-                        setTimeout( ()=>
+                        setTimeout( () =>
                         {
                             this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-                                ()=>
+                                () =>
                                 {
                                     console.log( 'Compilation finished! Can drag model!' );
                                     this.drawHandle( newHandle );
                                 } );
                         }, 20 );
-                    } 
+                    }
                     else
                     {
                         console.log( 'No vertex found!' );
@@ -322,23 +307,19 @@ export default class ASAP
             // model might not have loaded so might need to moved listeners to after the 
             // model has loaded
             let newVertices = this.LinearAlgebra.manipulation( this.handles, this.edges, this.originalVertices );
-            console.log(newVertices);
             for ( var i = 0; i < newVertices.length; i++ )
             {
-                this.model.geometry.attributes.position.setXY(3*i, newVertices[ i ].x, newVertices[ i ].y);
+                this.model.geometry.attributes.position.setXY(i, newVertices[ i ].x, newVertices[ i ].y);
 
                 // this.model.geometry.vertices[ i ].x = newVertices[ i ].x;
                 // this.model.geometry.vertices[ i ].y = newVertices[ i ].y;
             }
-
             this.model.geometry.attributes.position.needsUpdate = true;
-            this.updateScene();
         }
     }
 
     mouseUp( event )
     {
-        console.log("mouse up")
         if ( this.clickedOnHandle )
         {
             this.clickedOnHandle = false;
@@ -364,7 +345,6 @@ export default class ASAP
     //         this.drawHandle(frames[$(this).index()].handles[i]);
     //     }
 
-    //     this.updateScene();
     //     keyFrameMode = true;
     //   });
     // }
@@ -401,7 +381,6 @@ export default class ASAP
 
     //       scene.add(model);
     //       initializeFromMesh(model);
-    //       this.updateScene();
     //     },
     //     function (xhr) {
     //       console.log((xhr.loaded / xhr.total * 100) + '% loaded');
@@ -427,12 +406,15 @@ export default class ASAP
         //     console.log("vertexids",vertexIDs);
         // }
 
-        console.log( mesh );
+        // console.log( mesh );
 
         this.model = mesh;
         // ***this geometry structure is deprecated after v125 threejs test
+        const positionAttribute = this.model.geometry.getAttribute( 'position' );
+        console.log( positionAttribute );
         // ###deprecated
         const testGeometry = new Geometry().fromBufferGeometry( mesh.geometry );
+        console.log( testGeometry );
 
         this.faces = testGeometry.faces;
         // this.faces = mesh.geometry.faces;
@@ -470,7 +452,7 @@ export default class ASAP
         this.deformedVertices = cloneVertices( testGeometry.vertices );
         // this.originalVertices = cloneVertices( this.model.geometry.vertices );
         // this.deformedVertices = cloneVertices( this.model.geometry.vertices );
-        this.LinearAlgebra.registration( this.edges, this.originalVertices,this.deformedVertices );
+        this.LinearAlgebra.registration( this.edges, this.originalVertices, this.deformedVertices );
     }
 
     createHandleAtVertex( index, vertices )
@@ -492,10 +474,7 @@ export default class ASAP
     drawHandle( handle )
     {
         this.scene.add( handle );
-        this.updateScene();
     }
-
-
 
     createHandleAtPosition( worldPos, faces, vertices )
     {
@@ -550,45 +529,9 @@ export default class ASAP
 
     attachEvent()
     {
-        document.addEventListener( "mousedown", this.mouseClick_left.bind(this));
-        document.addEventListener( "mouseup", this.mouseUp.bind(this));
-        document.addEventListener( "mousemove", this.mouseMove.bind(this));
+        document.addEventListener( "mousedown", this.mouseClick_left.bind( this ) );
+        document.addEventListener( "mouseup", this.mouseUp.bind( this ) );
+        document.addEventListener( "mousemove", this.mouseMove.bind( this ) );
     }
-
-    updateScene()
-    {
-        this.renderer.render( this.scene, this.camera );
-    };
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-
-    // function initialization(objFile) {
-
-    //     barycentricCoordMode = false;
-    //     var clickedOnHandle = false;
-
-    // scene = new THREE.Scene();
-    // camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-    // camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-    // camera.lookAt(origin);
-
-    // var light = new THREE.PointLight('red', 1, 0);
-    // light.position.set(10, 10, 10);
-    // scene.add(light);
-
-    // renderer = new THREE.WebGLRenderer({ antialias: true, canvas: drawingSurface });
-    // renderer.setPixelRatio(window.devicePixelRatio);
-    // renderer.setSize(window.innerWidth, window.innerHeight);
-    // renderer.shadowMap.enabled = true;
-    // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    // renderer.gammaInput = true;
-    // renderer.gammaOutput = true;
-    // renderer.render(scene, camera);
-
-    // loadObj(objFile);
-    // renderAxes();
-    // };
-
 

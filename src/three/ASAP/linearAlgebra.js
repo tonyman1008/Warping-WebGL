@@ -1,20 +1,5 @@
 import * as math from 'mathjs';
-// import { NDArray } from 'vectorious';
 import { getVertex,getEdgeVectorFromEdge } from './extras';
-// var Gks = [];
-// var GkTerms = [];
-// var Hks = [];
-// var L1 = null;
-// var L2 = null;
-// var this.C1 = null;
-// var this.C2 = null;
-// var this.A1 = null;
-// var A2 = null;
-// var INVA1TA1 = null;
-// var INVA2TA2 = null;
-// var A1Term = null;
-// var A2Term = null;
-// var w = 1000;
 
 export default class LinearAlgebra
 {
@@ -64,10 +49,9 @@ export default class LinearAlgebra
 
     this.A1 = math.concat( this.L1, this.C1, 0 );
     this.A2 = math.concat( this.L2, this.C2, 0 );
-    console.log( this.A1.toArray() );
+
     this.A1 = math.matrix( this.A1.toArray() );
     this.A2 = math.matrix( this.A2.toArray() );
-    console.log( this.A1 );
 
     const A1_Transpose = math.transpose( this.A1 );
     const A2_Transpose = math.transpose( this.A2 );
@@ -200,8 +184,6 @@ export default class LinearAlgebra
     b1 = math.matrix( b1.toArray() );
     var res = math.multiply( this.A1Term, b1 );
     // var res = this.A1Term.multiply( b1 );
-    console.log(res);
-    console.log(this.deformedVertices);
     for ( var i = 0; i < this.deformedVertices.length; i++ )
     {
       this.deformedVertices[ i ].x = math.subset(res,math.index(2*i,0));
