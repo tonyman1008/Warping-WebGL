@@ -25,72 +25,19 @@ export default class ASAP
         this.selectedHandle = null;
         this.originalVertices = null;
         this.deformedVertices = null;
-        this.barycentricCoordMode = false;
+        this.barycentricCoordMode = true;
         this.w = 1000;
         this.clickedOnHandle = false
 
         this.LinearAlgebra = new LinearAlgebra();
         this.attachEvent();
-        console.log( "ASAP class init" )
+        console.log( "ASAP init" )
+
+        // ***this geometry structure is deprecated after v125 threejs test
+        this.testGeometry = new Geometry();
     }
 
-    contextMenu( event )
-    {
-        if ( this.keyFrameMode )
-        {
-            // $('.infoText').text('Viewing Keyframe. Please click "Reset" to start again.');
-            console.log( 'Viewing Keyframe. Please click "Reset" to start again.' );
-            return false;
-        }
 
-        var x = event.clientX;
-        var y = event.clientY;
-        var handleToRemove = null;
-
-        if ( this.barycentricCoordMode )
-        {
-            var nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
-            if ( this.handleExistsBaryCentricMode( nearestHandleIndex ) )
-            {
-                handleToRemove = this.getHandleBaryCentricMode( nearestHandleIndex );
-                this.eraseHandle( handleToRemove );
-                this.handles.splice( nearestHandleIndex, 1 );
-                // $('.infoText').text('Compilation started! Removing marker! Please Wait..');
-                console.log( 'Compilation started! Removing marker! Please Wait..' );
-                console.log( this.LinearAlgebra )
-                setTimeout( () =>
-                {
-                    this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-                        function ()
-                        {
-                            // $('.infoText').text('Compilation finished! Can drag model!');
-                            console.log( 'Compilation finished! Can drag model!' );
-                        } );
-                }, 20 );
-            }
-        } else
-        {
-            var nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
-            if ( this.handleExists( nearestVertexIndex ) )
-            {
-                handleToRemove = this.getHandle( nearestVertexIndex );
-                this.eraseHandle( handleToRemove );
-                this.handles = this.handles.filter( it => it.v_index != handleToRemove.v_index );
-                // $('.infoText').text('Compilation started! Removing marker! Please Wait..');
-                console.log( 'Compilation started! Removing marker! Please Wait..' );
-                setTimeout( function ()
-                {
-                    this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-                        function ()
-                        {
-                            // $('.infoText').text('Compilation finished! Can drag model!');
-                            console.log( 'Compilation finished! Can drag model!' );
-                        } );
-                }, 20 );
-            }
-        }
-        return false;
-    }
 
     getNearestHandleIndex( x, y, vertices )
     {
@@ -211,32 +158,59 @@ export default class ASAP
         return closestVertexIndex;
     }
 
-    mouseClick_left( event )
+    mouseLeftClick( event )
     {
-        var leftClicked = event.button == 0 ? true : false;
-        if ( leftClicked )
+        var x = event.clientX;
+        var y = event.clientY;
+
+        if ( this.barycentricCoordMode )
         {
-            var x = event.clientX;
-            var y = event.clientY;
+            var worldPos = this.getPointInWorldCoordinates( x, y );
+            var nearestHandle = null;
+            var nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
+            var newHandle = null;
 
-            if ( this.barycentricCoordMode )
+            if ( this.handleExistsBaryCentricMode( nearestHandleIndex ) )
             {
-                var worldPos = this.getPointInWorldCoordinates( x, y );
-                var nearestHandle = null;
-                var nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
-                var newHandle = null;
+                this.selectedHandle = this.getHandleBaryCentricMode( nearestHandleIndex );
+                this.clickedOnHandle = true;
+            }
+            else
+            {
+                this.clickedOnHandle = false;
+                newHandle = this.createHandleAtPosition( worldPos, this.model.geometry.faces, this.deformedVertices );
+                this.handles.push( newHandle );
+                console.log( 'Compilation started! Adding marker! Please Wait..' );
+                //TODO: chnage set time out
+                setTimeout( () =>
+                {
+                    this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
+                        () =>
+                        {
+                            console.log( 'Compilation finished! Can drag model!' );
+                            this.drawHandle( newHandle );
+                        } );
+                }, 20 );
+            }
+        }
+        else
+        {
+            var nearestVertex = null;
+            var nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
+            var newHandle = null;
 
-                if ( this.handleExistsBaryCentricMode( nearestHandleIndex ) )
+            if ( this.handleExists( nearestVertexIndex ) )
+            {
+                this.selectedHandle = this.getHandle( nearestVertexIndex );
+                this.clickedOnHandle = true;
+            } else
+            {
+                this.clickedOnHandle = false;
+                if ( nearestVertexIndex != null )
                 {
-                    this.selectedHandle = this.getHandleBaryCentricMode( nearestHandleIndex );
-                    this.clickedOnHandle = true;
-                } else
-                {
-                    this.clickedOnHandle = false;
-                    newHandle = this.createHandleAtPosition( worldPos, this.model.geometry.faces, this.deformedVertices );
+                    newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
                     this.handles.push( newHandle );
-                    console.log( 'Compilation started! Adding marker! Please Wait..' );
-                    //TODO: chnage set time out
+                    console.log( 'Compilation started! Adding handle marker! Please Wait..' );
                     setTimeout( () =>
                     {
                         this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
@@ -247,42 +221,75 @@ export default class ASAP
                             } );
                     }, 20 );
                 }
-            }
-            else
-            {
-                var nearestVertex = null;
-                var nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
-                var newHandle = null;
-
-                if ( this.handleExists( nearestVertexIndex ) )
+                else
                 {
-                    this.selectedHandle = this.getHandle( nearestVertexIndex );
-                    this.clickedOnHandle = true;
-                } else
-                {
-                    this.clickedOnHandle = false;
-                    if ( nearestVertexIndex != null )
-                    {
-                        newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
-                        this.handles.push( newHandle );
-                        console.log( 'Compilation started! Adding marker! Please Wait..' );
-                        setTimeout( () =>
-                        {
-                            this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-                                () =>
-                                {
-                                    console.log( 'Compilation finished! Can drag model!' );
-                                    this.drawHandle( newHandle );
-                                } );
-                        }, 20 );
-                    }
-                    else
-                    {
-                        console.log( 'No vertex found!' );
-                    }
+                    console.log( 'No vertex found!' );
                 }
             }
+        }
+    }
 
+    mouseRightClick( event )
+    {
+        if ( this.keyFrameMode )
+        {
+            console.log( 'Viewing Keyframe. Please click "Reset" to start again.' );
+            return false;
+        }
+
+        var x = event.clientX;
+        var y = event.clientY;
+        var handleToRemove = null;
+
+        if ( this.barycentricCoordMode )
+        {
+            var nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
+            if ( this.handleExistsBaryCentricMode( nearestHandleIndex ) )
+            {
+                handleToRemove = this.getHandleBaryCentricMode( nearestHandleIndex );
+                this.eraseHandle( handleToRemove );
+                this.handles.splice( nearestHandleIndex, 1 );
+                console.log( 'Compilation started! Removing handle marker! Please Wait..' );
+                setTimeout( () =>
+                {
+                    this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
+                        () =>
+                        {
+                            console.log( 'Compilation finished! Can drag model!' );
+                        } );
+                }, 20 );
+            }
+        } else
+        {
+            var nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
+            if ( this.handleExists( nearestVertexIndex ) )
+            {
+                handleToRemove = this.getHandle( nearestVertexIndex );
+                this.eraseHandle( handleToRemove );
+                this.handles = this.handles.filter( it => it.v_index != handleToRemove.v_index );
+                console.log( 'Compilation started! Removing handle marker! Please Wait..' );
+                setTimeout( () =>
+                {
+                    this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
+                        () =>
+                        {
+                            console.log( 'Compilation finished! Can drag model!' );
+                        } );
+                }, 20 );
+            }
+        }
+        return false;
+    }
+
+    mouseDown( event )
+    {
+        if ( event.button == 0 )
+        {
+            this.mouseLeftClick( event );
+        }
+        else if ( event.button == 2 )
+        {
+            this.mouseRightClick( event );
         }
     }
 
@@ -309,7 +316,7 @@ export default class ASAP
             let newVertices = this.LinearAlgebra.manipulation( this.handles, this.edges, this.originalVertices );
             for ( var i = 0; i < newVertices.length; i++ )
             {
-                this.model.geometry.attributes.position.setXY(i, newVertices[ i ].x, newVertices[ i ].y);
+                this.model.geometry.attributes.position.setXY( i, newVertices[ i ].x, newVertices[ i ].y );
 
                 // this.model.geometry.vertices[ i ].x = newVertices[ i ].x;
                 // this.model.geometry.vertices[ i ].y = newVertices[ i ].y;
@@ -413,10 +420,10 @@ export default class ASAP
         const positionAttribute = this.model.geometry.getAttribute( 'position' );
         console.log( positionAttribute );
         // ###deprecated
-        const testGeometry = new Geometry().fromBufferGeometry( mesh.geometry );
-        console.log( testGeometry );
+        this.testGeometry.fromBufferGeometry( mesh.geometry );
+        console.log( this.testGeometry );
 
-        this.faces = testGeometry.faces;
+        this.faces = this.testGeometry.faces;
         // this.faces = mesh.geometry.faces;
         for ( var i = 0; i < this.faces.length; i++ )
         {
@@ -448,8 +455,8 @@ export default class ASAP
         }
 
         // ###deprecated
-        this.originalVertices = cloneVertices( testGeometry.vertices );
-        this.deformedVertices = cloneVertices( testGeometry.vertices );
+        this.originalVertices = cloneVertices( this.testGeometry.vertices );
+        this.deformedVertices = cloneVertices( this.testGeometry.vertices );
         // this.originalVertices = cloneVertices( this.model.geometry.vertices );
         // this.deformedVertices = cloneVertices( this.model.geometry.vertices );
         this.LinearAlgebra.registration( this.edges, this.originalVertices, this.deformedVertices );
@@ -478,7 +485,7 @@ export default class ASAP
 
     createHandleAtPosition( worldPos, faces, vertices )
     {
-        var triangles = createTrianglesFromFaces( this.model.geometry.faces, vertices );
+        var triangles = createTrianglesFromFaces( this.testGeometry.faces, vertices );
         var newHandle = null;
         var uniformScale = this.cameraPosition.z / 120;
         for ( var i = 0; i < triangles.length; i++ )
@@ -529,7 +536,7 @@ export default class ASAP
 
     attachEvent()
     {
-        document.addEventListener( "mousedown", this.mouseClick_left.bind( this ) );
+        document.addEventListener( "mousedown", this.mouseDown.bind( this ) );
         document.addEventListener( "mouseup", this.mouseUp.bind( this ) );
         document.addEventListener( "mousemove", this.mouseMove.bind( this ) );
     }

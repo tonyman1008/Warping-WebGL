@@ -1,9 +1,9 @@
 import * as math from 'mathjs';
-import { getVertex,getEdgeVectorFromEdge } from './extras';
+import { getVertex, getEdgeVectorFromEdge } from './extras';
 
 export default class LinearAlgebra
 {
-  constructor( )
+  constructor()
   {
     this.Gks = [];
     this.GkTerms = [];
@@ -22,7 +22,7 @@ export default class LinearAlgebra
     this.deformedVertices = [];
   }
 
-  registration( edges, vertices,deformedVertices )
+  registration( edges, vertices, deformedVertices )
   {
     // add
     this.deformedVertices = deformedVertices;
@@ -44,6 +44,9 @@ export default class LinearAlgebra
 
   compilation( handles, vertices, barycentricMode, _callback )
   {
+    if(handles.length ==0)
+      return;
+
     this.C1 = this.buildC1( handles, vertices, barycentricMode );
     this.C2 = this.buildC2( handles, vertices, barycentricMode );
 
@@ -186,8 +189,8 @@ export default class LinearAlgebra
     // var res = this.A1Term.multiply( b1 );
     for ( var i = 0; i < this.deformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = math.subset(res,math.index(2*i,0));
-      this.deformedVertices[ i ].y = math.subset(res,math.index(2*i+1,0));
+      this.deformedVertices[ i ].x = math.subset( res, math.index( 2 * i, 0 ) );
+      this.deformedVertices[ i ].y = math.subset( res, math.index( 2 * i + 1, 0 ) );
       // this.deformedVertices[ i ].x = res.get( 2 * i, 0 );
       // this.deformedVertices[ i ].y = res.get( 2 * i + 1, 0 );
     }
@@ -205,8 +208,8 @@ export default class LinearAlgebra
 
     for ( var i = 0; i < this.deformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = math.subset(resx,math.index(i,0))
-      this.deformedVertices[ i ].y = math.subset(resy,math.index(i,0))
+      this.deformedVertices[ i ].x = math.subset( resx, math.index( i, 0 ) )
+      this.deformedVertices[ i ].y = math.subset( resy, math.index( i, 0 ) )
       // this.deformedVertices[ i ].x = resx.get( i, 0 );
       // this.deformedVertices[ i ].y = resy.get( i, 0 );
     }
@@ -342,6 +345,11 @@ export default class LinearAlgebra
       }
     }
     return gk;
+  }
+
+  reset()
+  {
+
   }
 
 }
