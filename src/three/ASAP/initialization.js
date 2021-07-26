@@ -12,7 +12,6 @@ export default class ASAP
         this.camera = iCamera
         this.scene = iScene
         this.renderer = iRenderer
-        this.mesh = null;
         this.origin = new THREE.Vector3( 0, 0, 0 );
         this.cameraPosition = new THREE.Vector3( 0, 0, 150 );
         this.model = null;
@@ -28,6 +27,7 @@ export default class ASAP
         this.barycentricCoordMode = true;
         this.w = 1000;
         this.clickedOnHandle = false
+        this.raycaster = new THREE.Raycaster();
 
         this.LinearAlgebra = new LinearAlgebra();
         this.attachEvent();
@@ -36,8 +36,6 @@ export default class ASAP
         // ***this geometry structure is deprecated after v125 threejs test
         this.testGeometry = new Geometry();
     }
-
-
 
     getNearestHandleIndex( x, y, vertices )
     {
@@ -162,6 +160,8 @@ export default class ASAP
     {
         var x = event.clientX;
         var y = event.clientY;
+        const isClickPointsOnObject = this.checkIfClickPointOnObject( x, y )
+        if ( isClickPointsOnObject == false ) return;
 
         if ( this.barycentricCoordMode )
         {
@@ -203,7 +203,8 @@ export default class ASAP
             {
                 this.selectedHandle = this.getHandle( nearestVertexIndex );
                 this.clickedOnHandle = true;
-            } else
+            }
+            else
             {
                 this.clickedOnHandle = false;
                 if ( nearestVertexIndex != null )
@@ -240,6 +241,7 @@ export default class ASAP
         var x = event.clientX;
         var y = event.clientY;
         var handleToRemove = null;
+
 
         if ( this.barycentricCoordMode )
         {
@@ -331,6 +333,15 @@ export default class ASAP
         {
             this.clickedOnHandle = false;
         }
+    }
+
+    checkIfClickPointOnObject( x, y )
+    {
+        const mouseWorldPos = new THREE.Vector2(x,)
+        mouseWorldPos.set( ( x / window.innerWidth ) * 2 - 1, -( y / window.innerHeight ) * 2 + 1 );
+        this.raycaster.setFromCamera(mouseWorldPos, this.camera )
+        const intersect = this.raycaster.intersectObject( this.model );
+        return ( intersect.length > 0 );
     }
 
     // updateFrameListeners() {
