@@ -2,33 +2,31 @@ import * as THREE from 'three'
 import LinearAlgebra from './linearAlgebra';
 import { cloneVertices, isBorderEdge, createTrianglesFromFaces } from './extras'
 import { Edge } from './edge'
-import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js';
+import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js'; //deprecated
 
 export default class ASAP
 {
 
-    constructor( iCamera, iScene, iRenderer )
+    constructor( iCamera, iScene )
     {
         this.camera = iCamera
         this.scene = iScene
-        this.renderer = iRenderer
-        this.origin = new THREE.Vector3( 0, 0, 0 );
-        this.cameraPosition = new THREE.Vector3( 0, 0, 150 );
         this.model = null;
         this.handles = [];
         this.edges = [];
         this.frames = [];
-        this.noFrame = 1;
         this.faces = [];
-        this.keyFrameMode = false;
         this.selectedHandle = null;
         this.originalVertices = null;
         this.deformedVertices = null;
-        this.barycentricCoordMode = true;
-        this.w = 1000;
-        this.clickedOnHandle = false
-        this.raycaster = new THREE.Raycaster();
+        this.barycentricCoordMode = false;
+        this.clickedOnHandle = false;
+        this.enableASAP = false;
+        this.w = 1000; // TODO set weight
 
+        // this.keyFrameMode = false; // TODO
+
+        this.raycaster = new THREE.Raycaster();
         this.LinearAlgebra = new LinearAlgebra();
         this.attachEvent();
         console.log( "ASAP init" )
@@ -41,7 +39,7 @@ export default class ASAP
     {
         var mouseTarget = this.getPointInWorldCoordinates( x, y );
         var distanceFromHandle = 0;
-        var distanceTolerance = this.cameraPosition.z / 100;
+        var distanceTolerance = this.camera.position.z / 100;
         var closestHandleIndex = null;
 
         for ( var i = 0; i < this.handles.length; i++ )
@@ -78,6 +76,15 @@ export default class ASAP
                 break;
             }
         }
+    }
+
+    eraseAllHandle()
+    {
+        for ( var i = 0; i < this.handles.length; i++ )
+        {
+            this.scene.remove( this.handles[i] );
+        }
+        this.handles = [];
     }
 
     getHandleBaryCentricMode( index )
@@ -140,7 +147,7 @@ export default class ASAP
     {
         var mouseTarget = this.getPointInWorldCoordinates( x, y );
         var distanceFromVertex = 0;
-        var distanceTolerance = this.cameraPosition.z / 100;;
+        var distanceTolerance = this.camera.position.z / 100;;
         var closestVertexIndex = null;
 
         for ( var i = 0; i < vertices.length; i++ )
@@ -242,7 +249,6 @@ export default class ASAP
         var y = event.clientY;
         var handleToRemove = null;
 
-
         if ( this.barycentricCoordMode )
         {
             var nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
@@ -285,6 +291,7 @@ export default class ASAP
 
     mouseDown( event )
     {
+        if ( this.enableASAP == false ) return;
         if ( event.button == 0 )
         {
             this.mouseLeftClick( event );
@@ -297,6 +304,8 @@ export default class ASAP
 
     mouseMove( event )
     {
+        if ( this.enableASAP == false ) return;
+
         if ( this.keyFrameMode )
         {
             console.log( 'Viewing Keyframe. Please click "Reset" to start again.' );
@@ -322,6 +331,8 @@ export default class ASAP
 
                 // this.model.geometry.vertices[ i ].x = newVertices[ i ].x;
                 // this.model.geometry.vertices[ i ].y = newVertices[ i ].y;
+                this.testGeometry.vertices[i].x = this.originalVertices[i].x
+                this.testGeometry.vertices[i].y = this.originalVertices[i].y
             }
             this.model.geometry.attributes.position.needsUpdate = true;
         }
@@ -337,77 +348,17 @@ export default class ASAP
 
     checkIfClickPointOnObject( x, y )
     {
-        const mouseWorldPos = new THREE.Vector2(x,)
+        const mouseWorldPos = new THREE.Vector2( x, )
         mouseWorldPos.set( ( x / window.innerWidth ) * 2 - 1, -( y / window.innerHeight ) * 2 + 1 );
-        this.raycaster.setFromCamera(mouseWorldPos, this.camera )
+        this.raycaster.setFromCamera( mouseWorldPos, this.camera )
         const intersect = this.raycaster.intersectObject( this.model );
         return ( intersect.length > 0 );
     }
-
-    // updateFrameListeners() {
-    //   $('.framesContainer > img').click(function (event) {
-    //     for (var i = 0; i < frames[$(this).index()].vertices.length; i++) {
-    //         this.model.geometry.vertices[i].x = frames[$(this).index()].vertices[i].x;
-    //       this.model.geometry.vertices[i].y = frames[$(this).index()].vertices[i].y;
-    //       this.deformedVertices = cloneVertices(model.geometry.vertices);
-    //     }
-    //     this.model.geometry.verticesNeedUpdate = true;
-
-    //     for (var i = 0; i < this.handles.length; i++) {
-    //       this.eraseHandle(handles[i]);
-    //     }
-    //     this.handles = [];
-
-    //     for (var i = 0; i < frames[$(this).index()].handles.length; i++) {
-    //         this.handles.push(frames[$(this).index()].handles[i]);
-    //         this.drawHandle(frames[$(this).index()].handles[i]);
-    //     }
-
-    //     keyFrameMode = true;
-    //   });
-    // }
-
-    // function reset(){
-    //   localStorage.clear();
-    //   location.reload();
-    // }
-
-    //  setBarycentricCoord(){
-    //   if (localStorage.getItem("barycentricCoord") == 'true') {
-    //     localStorage.setItem("barycentricCoord", 'false');
-    //   } else {
-    //     localStorage.setItem("barycentricCoord", 'true');
-    //   }
-    //   location.reload();
-    // }
 
     setWeight( weight )
     {
         this.w = weight;
     }
-
-    // loadObj(objPath) {
-    //   var loader = new THREE.OBJLoader();
-    //   loader.load(
-    //     objPath,
-    //     function (object) {
-    //       child = object.children[0];
-    //       var geometry = new THREE.Geometry().fromBufferGeometry(child.geometry);
-    //       geometry.mergeVertices();
-    //       var material = new THREE.MeshBasicMaterial({ wireframe: true });
-    //       model = new THREE.Mesh(geometry, material);
-
-    //       scene.add(model);
-    //       initializeFromMesh(model);
-    //     },
-    //     function (xhr) {
-    //       console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-    //     },
-    //     function (error) {
-    //       console.log('An error happened');
-    //     }
-    //   );
-    // };
 
     async initializeFromMesh( mesh )
     {
@@ -477,7 +428,7 @@ export default class ASAP
     {
         var vertex = vertices[ index ];
         var newHandle = null;
-        var uniformScale = this.cameraPosition.z / 120;
+        var uniformScale = this.camera.position.z / 120;
         var geometry = new THREE.SphereGeometry( 1, 32, 32 );
         var material = new THREE.MeshPhongMaterial( { shininess: 1 } );
         var newHandle = new THREE.Mesh( geometry, material );
@@ -498,7 +449,7 @@ export default class ASAP
     {
         var triangles = createTrianglesFromFaces( this.testGeometry.faces, vertices );
         var newHandle = null;
-        var uniformScale = this.cameraPosition.z / 120;
+        var uniformScale = this.camera.position.z / 120;
         for ( var i = 0; i < triangles.length; i++ )
         {
             if ( triangles[ i ].containsPoint( worldPos ) )
@@ -544,6 +495,60 @@ export default class ASAP
 
         return newHandle;
     }
+
+    onModeChange(){
+        this.eraseAllHandle();
+        console.log( 'Mode change! Removing all handle marker! Please Wait..' );
+        setTimeout( () =>
+        {
+            this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
+                () =>
+                {
+                    console.log( 'Compilation finished! Can drag model!' );
+                } );
+        }, 20 );
+    }
+
+    //TODO: reset
+    resetASAP()
+    {
+        if(this.enableASAP == false) return;
+
+        for ( var i = 0; i < this.originalVertices.length; i++ )
+        {
+            this.model.geometry.attributes.position.setXY( i, this.originalVertices[ i ].x, this.originalVertices[ i ].y );
+            this.testGeometry.vertices[i].x = this.originalVertices[i].x
+            this.testGeometry.vertices[i].y = this.originalVertices[i].y
+        }
+        this.model.geometry.attributes.position.needsUpdate= true;
+        this.deformedVertices = cloneVertices(this.testGeometry.vertices);
+        this.LinearAlgebra.resetDeformedVertices(this.deformedVertices)
+        this.eraseAllHandle();
+    }
+
+    //TODO: store frame of deformation vertices
+    // updateFrameListeners() {
+    //   $('.framesContainer > img').click(function (event) {
+    //     for (var i = 0; i < frames[$(this).index()].vertices.length; i++) {
+    //         this.model.geometry.vertices[i].x = frames[$(this).index()].vertices[i].x;
+    //       this.model.geometry.vertices[i].y = frames[$(this).index()].vertices[i].y;
+    //       this.deformedVertices = cloneVertices(model.geometry.vertices);
+    //     }
+    //     this.model.geometry.verticesNeedUpdate = true;
+
+    //     for (var i = 0; i < this.handles.length; i++) {
+    //       this.eraseHandle(handles[i]);
+    //     }
+    //     this.handles = [];
+
+    //     for (var i = 0; i < frames[$(this).index()].handles.length; i++) {
+    //         this.handles.push(frames[$(this).index()].handles[i]);
+    //         this.drawHandle(frames[$(this).index()].handles[i]);
+    //     }
+
+    //     keyFrameMode = true;
+    //   });
+    // }
 
     attachEvent()
     {

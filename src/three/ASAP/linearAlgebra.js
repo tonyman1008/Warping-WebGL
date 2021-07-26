@@ -347,6 +347,11 @@ export default class LinearAlgebra
     return gk;
   }
 
+  resetDeformedVertices(deformedVertices)
+  {
+    this.deformedVertices = deformedVertices
+  }
+
   reset()
   {
 
