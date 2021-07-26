@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import TriMesh from 'OpenMesh/Mesh/TriMeshT';
+import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
 export default class GridMesh3D extends THREE.Mesh
 {
@@ -20,7 +21,7 @@ export default class GridMesh3D extends THREE.Mesh
 
         this.verticesMat = new THREE.PointsMaterial({
             side: THREE.DoubleSide,
-            size: 2,
+            size: 1,
             transparent: false,
             vertexColors: true,
         })
@@ -51,7 +52,7 @@ export default class GridMesh3D extends THREE.Mesh
         const verticeLength = verticesPosition.length / 3;
         const vertextColor = [];
 
-        console.log("vertices length", verticeLength / 3)
+        console.log("vertices length", verticeLength)
         for (let i = 0; i < verticeLength; i++)
         {
             const color = this.defaultVertexColor;
@@ -66,8 +67,8 @@ export default class GridMesh3D extends THREE.Mesh
 
     public setTriMesh(triMesh: TriMesh)
     {
+        console.log(triMesh)
         this.triMesh = triMesh;
-        console.log(this.triMesh)
     }
 
     public setWireFrameVisible(option: boolean)

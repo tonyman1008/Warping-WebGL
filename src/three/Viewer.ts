@@ -6,6 +6,7 @@ import MeshEditor from './MeshEditor';
 import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
 import testImgPath from 'assets/balenciagaBag_crop/img01.png';
+import ASAP from './ASAP/ASAP';
 
 export default class Viewer
 {
@@ -23,6 +24,7 @@ export default class Viewer
 
     testWarpDegree: number;
     defaultPositionAttribute: THREE.BufferAttribute;
+    ASAP: ASAP;
 
     constructor()
     {
@@ -33,27 +35,34 @@ export default class Viewer
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
         this.viewportControls.camera.position.set(0, 0, 150)
+        this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();
         this.meshEditor = new MeshEditor(this.viewportControls.camera);
         this.objectMgr = new ObjectManager(this.scene, this.openMeshController);
-
         this.datGUI = new dat.GUI();
 
+        this.ASAP = new ASAP(this.viewportControls.camera, this.scene);
+
         this.testWarpDegree = 0;
-        this.testCreateMesh().then();
+        this.testCreateMesh();
         this.setGUI()
     }
 
     setGUI()
     {
+        const uniformWarpFolder = this.datGUI.addFolder('UniformWarp');
+        uniformWarpFolder.add(this, 'testWarpDegree', -30, 30, 1).name('warpDeg').onChange(this.warp.bind(this));
+        uniformWarpFolder.add(this, 'resetViewPort');
+        uniformWarpFolder.add(this, 'resetWarp');
 
-        this.datGUI.add(this, 'testWarpDegree', -30, 30, 1).onChange(this.warp.bind(this));
-        this.datGUI.add(this, 'resetViewPort');
-        this.datGUI.add(this, 'resetWarp');
+        const ASAPFolder = this.datGUI.addFolder('ASAP');
+        ASAPFolder.add(this.ASAP, 'enableASAP');
+        ASAPFolder.add(this.ASAP, 'barycentricCoordMode').name('barycentricMode').onChange(() => this.ASAP.onModeChange());
+        ASAPFolder.add(this.ASAP, 'resetASAP');
 
-        this.datGUI.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrame_visible')
-        this.datGUI.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('vertices_visible')
+        this.datGUI.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrameVisible')
+        this.datGUI.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
     }
 
     async testCreateMesh()
@@ -70,6 +79,9 @@ export default class Viewer
         console.log(this.testMesh);
         this.meshEditor.load(this.testMesh, this.testMesh.verticesPoints, this.testMesh.triMesh);
         this.scene.add(this.meshEditor.selectedFacesMeshes);
+
+        //asap test
+        this.ASAP.initializeFromMesh(this.testMesh);
     }
 
     warp()
