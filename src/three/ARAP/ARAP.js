@@ -4,7 +4,7 @@ import { cloneVertices, isBorderEdge, createTrianglesFromFaces } from './extras'
 import { Edge } from './edge'
 import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js'; //deprecated
 
-export default class ASAP
+export default class ARAP
 {
 
     constructor( iCamera, iScene )
@@ -21,7 +21,7 @@ export default class ASAP
         this.deformedVertices = null;
         this.barycentricCoordMode = false;
         this.clickedOnHandle = false;
-        this.enableASAP = false;
+        this.enableARAP = true;
         this.w = 1000; // TODO set weight
 
         // this.keyFrameMode = false; // TODO
@@ -29,7 +29,7 @@ export default class ASAP
         this.raycaster = new THREE.Raycaster();
         this.LinearAlgebra = new LinearAlgebra();
         this.attachEvent();
-        console.log( "ASAP init" )
+        console.log( "ARAP init" )
 
         // ***this geometry structure is deprecated after v125 threejs test
         this.testGeometry = new Geometry();
@@ -291,7 +291,7 @@ export default class ASAP
 
     mouseDown( event )
     {
-        if ( this.enableASAP == false ) return;
+        if ( this.enableARAP == false ) return;
         if ( event.button == 0 )
         {
             this.mouseLeftClick( event );
@@ -304,7 +304,7 @@ export default class ASAP
 
     mouseMove( event )
     {
-        if ( this.enableASAP == false ) return;
+        if ( this.enableARAP == false ) return;
 
         if ( this.keyFrameMode )
         {
@@ -352,7 +352,12 @@ export default class ASAP
         mouseWorldPos.set( ( x / window.innerWidth ) * 2 - 1, -( y / window.innerHeight ) * 2 + 1 );
         this.raycaster.setFromCamera( mouseWorldPos, this.camera )
         const intersect = this.raycaster.intersectObject( this.model );
-        return ( intersect.length > 0 );
+        if(intersect.length > 0){
+            return true;
+        }else{
+            console.log("Please click in mesh area")
+            return false;
+        }
     }
 
     setWeight( weight )
@@ -510,9 +515,9 @@ export default class ASAP
     }
 
     //TODO: reset
-    resetASAP()
+    resetARAP()
     {
-        if(this.enableASAP == false) return;
+        if(this.enableARAP == false) return;
 
         for ( var i = 0; i < this.originalVertices.length; i++ )
         {
@@ -549,6 +554,8 @@ export default class ASAP
     //     keyFrameMode = true;
     //   });
     // }
+
+    //TODO: windows resize?
 
     attachEvent()
     {

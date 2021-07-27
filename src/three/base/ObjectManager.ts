@@ -39,7 +39,7 @@ export default class ObjectManager
 
     public async createGridMesh(testImgPath, blendColor)
     {
-        const geo = new THREE.PlaneBufferGeometry(100, 100, 5, 5);
+        const geo = new THREE.PlaneBufferGeometry(1, 1, 8, 8);
 
         const textureMap = await this.textureLoader.loadAsync(testImgPath);
         textureMap.wrapS = THREE.RepeatWrapping;

@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import TriMesh from 'OpenMesh/Mesh/TriMeshT';
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
 export default class GridMesh3D extends THREE.Mesh
 {
@@ -21,7 +20,7 @@ export default class GridMesh3D extends THREE.Mesh
 
         this.verticesMat = new THREE.PointsMaterial({
             side: THREE.DoubleSide,
-            size: 1,
+            size: 0.01,
             transparent: false,
             vertexColors: true,
         })
