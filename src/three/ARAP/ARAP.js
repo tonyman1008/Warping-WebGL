@@ -37,12 +37,12 @@ export default class ARAP
 
     getNearestHandleIndex( x, y, vertices )
     {
-        var mouseTarget = this.getPointInWorldCoordinates( x, y );
-        var distanceFromHandle = 0;
-        var distanceTolerance = this.camera.position.z / 100;
-        var closestHandleIndex = null;
+        const mouseTarget = this.getPointInWorldCoordinates( x, y );
+        let distanceFromHandle = 0;
+        let distanceTolerance = this.camera.position.z / 100;
+        let closestHandleIndex = null;
 
-        for ( var i = 0; i < this.handles.length; i++ )
+        for ( let i = 0; i < this.handles.length; i++ )
         {
             distanceFromHandle = this.handles[ i ].position.distanceTo( mouseTarget );
             if ( distanceFromHandle < distanceTolerance )
@@ -56,19 +56,19 @@ export default class ARAP
 
     getPointInWorldCoordinates( x, y )
     {
-        var vector = new THREE.Vector3();
+        const vector = new THREE.Vector3();
         vector.set( ( x / window.innerWidth ) * 2 - 1, -( y / window.innerHeight ) * 2 + 1, 0.5 );
         vector.unproject( this.camera );
-        var dir = vector.sub( this.camera.position ).normalize();
-        var distance = - this.camera.position.z / dir.z;
-        var pos = this.camera.position.clone().add( dir.multiplyScalar( distance ) );
+        const dir = vector.sub( this.camera.position ).normalize();
+        const distance = - this.camera.position.z / dir.z;
+        const pos = this.camera.position.clone().add( dir.multiplyScalar( distance ) );
 
         return pos;
     };
 
     eraseHandle( handle )
     {
-        for ( var i = 0; i < this.handles.length; i++ )
+        for ( let i = 0; i < this.handles.length; i++ )
         {
             if ( this.handles[ i ].v_index == this.handle.v_index )
             {
@@ -80,7 +80,7 @@ export default class ARAP
 
     eraseAllHandle()
     {
-        for ( var i = 0; i < this.handles.length; i++ )
+        for ( let i = 0; i < this.handles.length; i++ )
         {
             this.scene.remove( this.handles[i] );
         }
@@ -90,7 +90,7 @@ export default class ARAP
     getHandleBaryCentricMode( index )
     {
         this.handle = null;
-        for ( var i = 0; i < this.handles.length; i++ )
+        for ( let i = 0; i < this.handles.length; i++ )
         {
             if ( i == index )
             {
@@ -104,7 +104,7 @@ export default class ARAP
     getHandle( modelVertexIndex )
     {
         this.handle = null;
-        for ( var i = 0; i < this.handles.length; i++ )
+        for ( let i = 0; i < this.handles.length; i++ )
         {
             if ( this.handles[ i ].v_index == modelVertexIndex )
             {
@@ -118,7 +118,7 @@ export default class ARAP
     handleExists( modelVertexIndex )
     {
         let exists = false;
-        for ( var i = 0; i < this.handles.length; i++ )
+        for ( let i = 0; i < this.handles.length; i++ )
         {
             if ( this.handles[ i ].v_index == modelVertexIndex )
             {
@@ -132,7 +132,7 @@ export default class ARAP
     handleExistsBaryCentricMode( index )
     {
         let exists = false;
-        for ( var i = 0; i < this.handles.length; i++ )
+        for ( let i = 0; i < this.handles.length; i++ )
         {
             if ( i == index )
             {
@@ -145,12 +145,12 @@ export default class ARAP
 
     getNearestModelVertexIndex( x, y, vertices )
     {
-        var mouseTarget = this.getPointInWorldCoordinates( x, y );
-        var distanceFromVertex = 0;
-        var distanceTolerance = this.camera.position.z / 100;;
-        var closestVertexIndex = null;
+        const mouseTarget = this.getPointInWorldCoordinates( x, y );
+        let distanceFromVertex = 0;
+        let distanceTolerance = this.camera.position.z / 100;;
+        let closestVertexIndex = null;
 
-        for ( var i = 0; i < vertices.length; i++ )
+        for ( let i = 0; i < vertices.length; i++ )
         {
             distanceFromVertex = vertices[ i ].distanceTo( mouseTarget );
             if ( distanceFromVertex < distanceTolerance )
@@ -165,17 +165,17 @@ export default class ARAP
 
     mouseLeftClick( event )
     {
-        var x = event.clientX;
-        var y = event.clientY;
+        const x = event.clientX;
+        const y = event.clientY;
         const isClickPointsOnObject = this.checkIfClickPointOnObject( x, y )
         if ( isClickPointsOnObject == false ) return;
 
         if ( this.barycentricCoordMode )
         {
-            var worldPos = this.getPointInWorldCoordinates( x, y );
-            var nearestHandle = null;
-            var nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
-            var newHandle = null;
+            const worldPos = this.getPointInWorldCoordinates( x, y );
+            const nearestHandle = null;
+            const nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
+            let newHandle = null;
 
             if ( this.handleExistsBaryCentricMode( nearestHandleIndex ) )
             {
@@ -202,9 +202,9 @@ export default class ARAP
         }
         else
         {
-            var nearestVertex = null;
-            var nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
-            var newHandle = null;
+            const nearestVertex = null;
+            const nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
+            let newHandle = null;
 
             if ( this.handleExists( nearestVertexIndex ) )
             {
@@ -245,13 +245,13 @@ export default class ARAP
             return false;
         }
 
-        var x = event.clientX;
-        var y = event.clientY;
-        var handleToRemove = null;
+        const x = event.clientX;
+        const y = event.clientY;
+        let handleToRemove = null;
 
         if ( this.barycentricCoordMode )
         {
-            var nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
+            const nearestHandleIndex = this.getNearestHandleIndex( x, y, this.deformedVertices );
             if ( this.handleExistsBaryCentricMode( nearestHandleIndex ) )
             {
                 handleToRemove = this.getHandleBaryCentricMode( nearestHandleIndex );
@@ -269,7 +269,7 @@ export default class ARAP
             }
         } else
         {
-            var nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
+            const nearestVertexIndex = this.getNearestModelVertexIndex( x, y, this.deformedVertices );
             if ( this.handleExists( nearestVertexIndex ) )
             {
                 handleToRemove = this.getHandle( nearestVertexIndex );
@@ -314,9 +314,9 @@ export default class ARAP
 
         if ( this.clickedOnHandle )
         {
-            var x = event.clientX;
-            var y = event.clientY;
-            var mouseTarget = this.getPointInWorldCoordinates( x, y );
+            const x = event.clientX;
+            const y = event.clientY;
+            const mouseTarget = this.getPointInWorldCoordinates( x, y );
 
             //this will update handles[i] element that is selectedHandle
             this.selectedHandle.position.x = mouseTarget.x;
@@ -325,7 +325,7 @@ export default class ARAP
             // model might not have loaded so might need to moved listeners to after the 
             // model has loaded
             let newVertices = this.LinearAlgebra.manipulation( this.handles, this.edges, this.originalVertices );
-            for ( var i = 0; i < newVertices.length; i++ )
+            for ( let i = 0; i < newVertices.length; i++ )
             {
                 this.model.geometry.attributes.position.setXY( i, newVertices[ i ].x, newVertices[ i ].y );
 
@@ -392,17 +392,17 @@ export default class ARAP
 
         this.faces = this.testGeometry.faces;
         // this.faces = mesh.geometry.faces;
-        for ( var i = 0; i < this.faces.length; i++ )
+        for ( let i = 0; i < this.faces.length; i++ )
         {
-            var currentEdge1 = new Edge( this.faces[ i ].a, this.faces[ i ].b, i );
-            var currentEdge2 = new Edge( this.faces[ i ].b, this.faces[ i ].c, i );
-            var currentEdge3 = new Edge( this.faces[ i ].a, this.faces[ i ].c, i );
+            const currentEdge1 = new Edge( this.faces[ i ].a, this.faces[ i ].b, i );
+            const currentEdge2 = new Edge( this.faces[ i ].b, this.faces[ i ].c, i );
+            const currentEdge3 = new Edge( this.faces[ i ].a, this.faces[ i ].c, i );
             if ( !Edge.edgeDoesExist( this.edges, currentEdge1 ) ) { this.edges.push( currentEdge1 ); }
             if ( !Edge.edgeDoesExist( this.edges, currentEdge2 ) ) { this.edges.push( currentEdge2 ); }
             if ( !Edge.edgeDoesExist( this.edges, currentEdge3 ) ) { this.edges.push( currentEdge3 ); }
         }
 
-        for ( var i = 0; i < this.edges.length; i++ )
+        for ( let i = 0; i < this.edges.length; i++ )
         {
             if ( isBorderEdge( this.edges[ i ], this.faces ) )
             {
@@ -414,10 +414,10 @@ export default class ARAP
             }
         }
 
-        var allEdges = Edge.getAllEdges( this.faces );
-        for ( var i = 0; i < this.edges.length; i++ )
+        const allEdges = Edge.getAllEdges( this.faces );
+        for ( let i = 0; i < this.edges.length; i++ )
         {
-            var neighbors = Edge.getEdgeNeighbors( this.edges[ i ], allEdges, this.faces );
+            const neighbors = Edge.getEdgeNeighbors( this.edges[ i ], allEdges, this.faces );
             this.edges[ i ].setNeighbors( neighbors );
         }
 
@@ -431,12 +431,11 @@ export default class ARAP
 
     createHandleAtVertex( index, vertices )
     {
-        var vertex = vertices[ index ];
-        var newHandle = null;
-        var uniformScale = this.camera.position.z / 120;
-        var geometry = new THREE.SphereGeometry( 1, 32, 32 );
-        var material = new THREE.MeshPhongMaterial( { shininess: 1 } );
-        var newHandle = new THREE.Mesh( geometry, material );
+        const vertex = vertices[ index ];
+        const uniformScale = this.camera.position.z / 120;
+        const geometry = new THREE.SphereGeometry( 1, 32, 32 );
+        const material = new THREE.MeshPhongMaterial( { shininess: 1 } );
+        const newHandle = new THREE.Mesh( geometry, material );
 
         newHandle.position.set( vertex.x, vertex.y, vertex.z );
         newHandle.scale.set( uniformScale, uniformScale, uniformScale );
@@ -452,40 +451,40 @@ export default class ARAP
 
     createHandleAtPosition( worldPos, faces, vertices )
     {
-        var triangles = createTrianglesFromFaces( this.testGeometry.faces, vertices );
-        var newHandle = null;
-        var uniformScale = this.camera.position.z / 120;
-        for ( var i = 0; i < triangles.length; i++ )
+        const triangles = createTrianglesFromFaces( this.testGeometry.faces, vertices );
+        let newHandle = null;
+        const uniformScale = this.camera.position.z / 120;
+        for ( let i = 0; i < triangles.length; i++ )
         {
             if ( triangles[ i ].containsPoint( worldPos ) )
             {
 
-                var x1y1 = new THREE.Vector3( triangles[ i ].a.x, triangles[ i ].a.y, triangles[ i ].a.z );
-                var x2y2 = new THREE.Vector3( triangles[ i ].b.x, triangles[ i ].b.y, triangles[ i ].b.z );
-                var x3y3 = new THREE.Vector3( triangles[ i ].c.x, triangles[ i ].c.y, triangles[ i ].c.z );
+                let x1y1 = new THREE.Vector3( triangles[ i ].a.x, triangles[ i ].a.y, triangles[ i ].a.z );
+                let x2y2 = new THREE.Vector3( triangles[ i ].b.x, triangles[ i ].b.y, triangles[ i ].b.z );
+                let x3y3 = new THREE.Vector3( triangles[ i ].c.x, triangles[ i ].c.y, triangles[ i ].c.z );
 
-                var triangleA = new THREE.Triangle( x3y3, x2y2, x1y1 );
-                var triangleA1 = new THREE.Triangle( x3y3, x2y2, worldPos );
-                var triangleA2 = new THREE.Triangle( x1y1, x3y3, worldPos );
-                var triangleA3 = new THREE.Triangle( x1y1, x2y2, worldPos );
+                let triangleA = new THREE.Triangle( x3y3, x2y2, x1y1 );
+                let triangleA1 = new THREE.Triangle( x3y3, x2y2, worldPos );
+                let triangleA2 = new THREE.Triangle( x1y1, x3y3, worldPos );
+                let triangleA3 = new THREE.Triangle( x1y1, x2y2, worldPos );
 
-                var areaA = triangleA.area();
-                var areaA1 = triangleA1.area();
-                var areaA2 = triangleA2.area();
-                var areaA3 = triangleA3.area();
+                let areaA = triangleA.area();
+                let areaA1 = triangleA1.area();
+                let areaA2 = triangleA2.area();
+                let areaA3 = triangleA3.area();
 
-                var l1 = areaA1 / areaA;
-                var l2 = areaA2 / areaA;
-                var l3 = areaA3 / areaA;
+                let l1 = areaA1 / areaA;
+                let l2 = areaA2 / areaA;
+                let l3 = areaA3 / areaA;
 
                 x1y1 = x1y1.multiplyScalar( l1 );
                 x2y2 = x2y2.multiplyScalar( l2 );
                 x3y3 = x3y3.multiplyScalar( l3 );
 
-                var p = x1y1.add( x2y2 ).add( x3y3 );
+                let p = x1y1.add( x2y2 ).add( x3y3 );
 
-                var geometry = new THREE.SphereGeometry( 1, 32, 32 );
-                var material = new THREE.MeshPhongMaterial( { shininess: 1 } );
+                let geometry = new THREE.SphereGeometry( 1, 32, 32 );
+                let material = new THREE.MeshPhongMaterial( { shininess: 1 } );
                 newHandle = new THREE.Mesh( geometry, material );
                 newHandle.position.set( p.x, p.y, p.z );
                 newHandle.scale.set( uniformScale, uniformScale, uniformScale );
@@ -519,7 +518,7 @@ export default class ARAP
     {
         if(this.enableARAP == false) return;
 
-        for ( var i = 0; i < this.originalVertices.length; i++ )
+        for ( let i = 0; i < this.originalVertices.length; i++ )
         {
             this.model.geometry.attributes.position.setXY( i, this.originalVertices[ i ].x, this.originalVertices[ i ].y );
             this.testGeometry.vertices[i].x = this.originalVertices[i].x
@@ -534,19 +533,19 @@ export default class ARAP
     //TODO: store frame of deformation vertices
     // updateFrameListeners() {
     //   $('.framesContainer > img').click(function (event) {
-    //     for (var i = 0; i < frames[$(this).index()].vertices.length; i++) {
+    //     for (let i = 0; i < frames[$(this).index()].vertices.length; i++) {
     //         this.model.geometry.vertices[i].x = frames[$(this).index()].vertices[i].x;
     //       this.model.geometry.vertices[i].y = frames[$(this).index()].vertices[i].y;
     //       this.deformedVertices = cloneVertices(model.geometry.vertices);
     //     }
     //     this.model.geometry.verticesNeedUpdate = true;
 
-    //     for (var i = 0; i < this.handles.length; i++) {
+    //     for (let i = 0; i < this.handles.length; i++) {
     //       this.eraseHandle(handles[i]);
     //     }
     //     this.handles = [];
 
-    //     for (var i = 0; i < frames[$(this).index()].handles.length; i++) {
+    //     for (let i = 0; i < frames[$(this).index()].handles.length; i++) {
     //         this.handles.push(frames[$(this).index()].handles[i]);
     //         this.drawHandle(frames[$(this).index()].handles[i]);
     //     }

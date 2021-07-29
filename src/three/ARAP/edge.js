@@ -13,7 +13,7 @@ class Edge
   {
     this.HNeighbors = math.matrix();
     this.neighbors = neighbors;
-    for ( var i = 0; i < neighbors.length; i++ )
+    for ( let i = 0; i < neighbors.length; i++ )
     {
       this.HNeighbors.set( [ 2 * i, 0 ], 2 * neighbors[ i ] );
       this.HNeighbors.set( [ 2 * i + 1, 0 ], 2 * neighbors[ i ] + 1 );
@@ -27,7 +27,7 @@ class Edge
 
   equals( edge )
   {
-    var equal = false;
+    let equal = false;
     if ( ( ( this.start == edge.start ) && ( this.end == edge.end ) ) ||
       ( ( this.start == edge.end ) && ( this.end == edge.start ) ) )
     {
@@ -38,10 +38,11 @@ class Edge
 
   static addNeighbors( neighbors, edge, face, faces )
   {
+    //new face? 
     var face = faces[ edge.parentFaceIndex ];
-    var vertex1 = face.a;
-    var vertex2 = face.b;
-    var vertex3 = face.c;
+    let vertex1 = face.a;
+    let vertex2 = face.b;
+    let vertex3 = face.c;
 
     if ( !neighbors.includes( vertex1 ) ) { neighbors.push( vertex1 ) };
     if ( !neighbors.includes( vertex2 ) ) { neighbors.push( vertex2 ) };
@@ -52,8 +53,8 @@ class Edge
 
   static edgeDoesExist( edges, tmpEdge )
   {
-    var exists = false;
-    for ( var i = 0; i < edges.length; i++ )
+    let exists = false;
+    for ( let i = 0; i < edges.length; i++ )
     {
       if ( edges[ i ].equals( tmpEdge ) )
       {
@@ -65,14 +66,14 @@ class Edge
 
   static getAllEdges( faces )
   {
-    var allEdges = [];
+    let allEdges = [];
 
-    for ( var i = 0; i < faces.length; i++ )
+    for ( let i = 0; i < faces.length; i++ )
     {
 
-      var currentEdge1 = new Edge( faces[ i ].a, faces[ i ].b, i );
-      var currentEdge2 = new Edge( faces[ i ].b, faces[ i ].c, i );
-      var currentEdge3 = new Edge( faces[ i ].a, faces[ i ].c, i );
+      let currentEdge1 = new Edge( faces[ i ].a, faces[ i ].b, i );
+      let currentEdge2 = new Edge( faces[ i ].b, faces[ i ].c, i );
+      let currentEdge3 = new Edge( faces[ i ].a, faces[ i ].c, i );
 
       allEdges.push( currentEdge1 );
       allEdges.push( currentEdge2 );
@@ -83,12 +84,12 @@ class Edge
 
   static getEdgeNeighbors( edge, allEdges, faces )
   {
-    var count = 0;
-    var neighbors = [];
-    var face = null;
+    let count = 0;
+    let neighbors = [];
+    let face = null;
     neighbors.push( edge.start );
     neighbors.push( edge.end );
-    for ( var i = 0; i < allEdges.length; i++ )
+    for ( let i = 0; i < allEdges.length; i++ )
     {
       if ( edge.equals( allEdges[ i ] ) )
       {
@@ -106,8 +107,8 @@ class Edge
 
   static getBorderEdges( edges, faces )
   {
-    var borderEdges = [];
-    for ( var i = 0; i < edges.length; i++ )
+    let borderEdges = [];
+    for ( let i = 0; i < edges.length; i++ )
     {
       if ( Edge.isBorderEdge( edges[ i ], faces ) )
       {
@@ -119,8 +120,8 @@ class Edge
 
   static getNonBorderEdges( edges, faces )
   {
-    var nonBorderEdges = [];
-    for ( var i = 0; i < edges.length; i++ )
+    let nonBorderEdges = [];
+    for ( let i = 0; i < edges.length; i++ )
     {
       if ( !Edge.isBorderEdge( edges[ i ], faces ) )
       {

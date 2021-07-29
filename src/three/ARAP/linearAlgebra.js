@@ -27,8 +27,8 @@ export default class LinearAlgebra
     // add
     this.deformedVertices = deformedVertices;
 
-    var gk, hk, gkTerm = null;
-    for ( var i = 0; i < edges.length; i++ )
+    let gk, hk, gkTerm = null;
+    for ( let i = 0; i < edges.length; i++ )
     {
       gk = this.getGkMatrix( edges[ i ], vertices, true );
       this.Gks.push( gk );
@@ -73,10 +73,10 @@ export default class LinearAlgebra
 
   buildC1( handles, vertices, barycentricMode )
   {
-    var C1 = math.zeros( handles.length * 2, vertices.length * 2 );
+    let C1 = math.zeros( handles.length * 2, vertices.length * 2 );
     if ( barycentricMode )
     {
-      for ( var i = 0; i < handles.length; i++ )
+      for ( let i = 0; i < handles.length; i++ )
       {
         C1.set( [ 2 * i, 2 * handles[ i ].triangleV1Index ], this.w * ( handles[ i ].l1 ) );
         C1.set( [ 2 * i + 1, 2 * handles[ i ].triangleV1Index + 1 ], this.w * ( handles[ i ].l1 ) );
@@ -87,7 +87,7 @@ export default class LinearAlgebra
       }
     } else
     {
-      for ( var i = 0; i < handles.length; i++ )
+      for ( let i = 0; i < handles.length; i++ )
       {
         C1.set( [ 2 * i, 2 * handles[ i ].v_index ], this.w );
         C1.set( [ 2 * i + 1, 2 * handles[ i ].v_index + 1 ], this.w );
@@ -98,10 +98,10 @@ export default class LinearAlgebra
 
   buildC2( handles, vertices, barycentricMode )
   {
-    var C2 = math.zeros( handles.length, vertices.length );
+    let C2 = math.zeros( handles.length, vertices.length );
     if ( barycentricMode )
     {
-      for ( var i = 0; i < handles.length; i++ )
+      for ( let i = 0; i < handles.length; i++ )
       {
         C2.set( [ i, handles[ i ].triangleV1Index ], this.w * ( handles[ i ].l1 ) );
         C2.set( [ i, handles[ i ].triangleV2Index ], this.w * ( handles[ i ].l2 ) );
@@ -109,7 +109,7 @@ export default class LinearAlgebra
       }
     } else
     {
-      for ( var i = 0; i < handles.length; i++ )
+      for ( let i = 0; i < handles.length; i++ )
       {
         C2.set( [ i, handles[ i ].v_index ], this.w );
       }
@@ -119,12 +119,12 @@ export default class LinearAlgebra
 
   getHkFromEdge( edge, vertices, gkTerm )
   {
-    var edgeStartVertex = getVertex( edge.start, vertices );
-    var edgeEndVertex = getVertex( edge.end, vertices );
-    var ekx = edgeEndVertex.x - edgeStartVertex.x;
-    var eky = edgeEndVertex.y - edgeStartVertex.y;
-    var ekxyTerm = math.matrix( [ [ ekx, eky ], [ eky, -ekx ] ] );
-    var constantTerm = null;
+    const edgeStartVertex = getVertex( edge.start, vertices );
+    const edgeEndVertex = getVertex( edge.end, vertices );
+    let ekx = edgeEndVertex.x - edgeStartVertex.x;
+    let eky = edgeEndVertex.y - edgeStartVertex.y;
+    let ekxyTerm = math.matrix( [ [ ekx, eky ], [ eky, -ekx ] ] );
+    let constantTerm = null;
 
     if ( edge.isBorderEdge )
     {
@@ -140,16 +140,16 @@ export default class LinearAlgebra
       gkTerm,
     } );
 
-    var h = math.subtract( constantTerm, math.multiply( ekxyTerm, gkTermTopTwoRows ) );
+    let h = math.subtract( constantTerm, math.multiply( ekxyTerm, gkTermTopTwoRows ) );
     return h;
   }
 
   buildL1( Hks, edges )
   {
-    var L1 = math.matrix();
-    for ( var i = 0; i < Hks.length; i++ )
+    let L1 = math.matrix();
+    for ( let i = 0; i < Hks.length; i++ )
     {
-      for ( var j = 0; j < Hks[ i ].size()[ 1 ]; j++ )
+      for ( let j = 0; j < Hks[ i ].size()[ 1 ]; j++ )
       {
         L1.set( [ 2 * i, edges[ i ].HNeighbors.get( [ j, 0 ] ) ], Hks[ i ].get( [ 0, j ] ) )
         L1.set( [ 2 * i + 1, edges[ i ].HNeighbors.get( [ j, 0 ] ) ], Hks[ i ].get( [ 1, j ] ) )
@@ -160,8 +160,8 @@ export default class LinearAlgebra
 
   buildL2( edges )
   {
-    var L2 = math.matrix();
-    for ( var i = 0; i < edges.length; i++ )
+    let L2 = math.matrix();
+    for ( let i = 0; i < edges.length; i++ )
     {
       L2.set( [ i, edges[ i ].end ], 1 );
       L2.set( [ i, edges[ i ].start ], -1 );
@@ -171,13 +171,13 @@ export default class LinearAlgebra
 
   manipulation( handles, edges, origVertices )
   {
-    var b1 = this.buildB1( handles, edges );
-    var similarityTransformResult = this.similarityTransform( b1 );
+    let b1 = this.buildB1( handles, edges );
+    let similarityTransformResult = this.similarityTransform( b1 );
 
-    var b2x = this.buildB2( handles, edges, similarityTransformResult, origVertices, 'x' );
-    var b2y = this.buildB2( handles, edges, similarityTransformResult, origVertices, 'y' );
+    let b2x = this.buildB2( handles, edges, similarityTransformResult, origVertices, 'x' );
+    let b2y = this.buildB2( handles, edges, similarityTransformResult, origVertices, 'y' );
 
-    var scaleAdjustmentResult = this.scaleAdjustmentRenameMe( b2x, b2y );
+    let scaleAdjustmentResult = this.scaleAdjustmentRenameMe( b2x, b2y );
 
     return scaleAdjustmentResult;
   }
@@ -185,9 +185,9 @@ export default class LinearAlgebra
   similarityTransform( b1 )
   {
     b1 = math.matrix( b1.toArray() );
-    var res = math.multiply( this.A1Term, b1 );
-    // var res = this.A1Term.multiply( b1 );
-    for ( var i = 0; i < this.deformedVertices.length; i++ )
+    let res = math.multiply( this.A1Term, b1 );
+    // let res = this.A1Term.multiply( b1 );
+    for ( let i = 0; i < this.deformedVertices.length; i++ )
     {
       this.deformedVertices[ i ].x = math.subset( res, math.index( 2 * i, 0 ) );
       this.deformedVertices[ i ].y = math.subset( res, math.index( 2 * i + 1, 0 ) );
@@ -201,12 +201,12 @@ export default class LinearAlgebra
   {
     b2x = math.matrix( b2x.toArray() );
     b2y = math.matrix( b2y.toArray() );
-    var resx = math.multiply( this.A2Term, b2x );
-    var resy = math.multiply( this.A2Term, b2y );
-    // var resx = this.A2Term.multiply( b2x );
-    // var resy = this.A2Term.multiply( b2y );
+    let resx = math.multiply( this.A2Term, b2x );
+    let resy = math.multiply( this.A2Term, b2y );
+    // let resx = this.A2Term.multiply( b2x );
+    // let resy = this.A2Term.multiply( b2y );
 
-    for ( var i = 0; i < this.deformedVertices.length; i++ )
+    for ( let i = 0; i < this.deformedVertices.length; i++ )
     {
       this.deformedVertices[ i ].x = math.subset( resx, math.index( i, 0 ) )
       this.deformedVertices[ i ].y = math.subset( resy, math.index( i, 0 ) )
@@ -218,10 +218,10 @@ export default class LinearAlgebra
 
   buildB1( handles, edges )
   {
-    var b1EdgeVectors = math.matrix( math.zeros( [ edges.length * 2, 1 ] ) );
-    var b1Handles = math.matrix();
-    var b1 = math.matrix();
-    for ( var i = 0; i < handles.length; i++ )
+    let b1EdgeVectors = math.matrix( math.zeros( [ edges.length * 2, 1 ] ) );
+    let b1Handles = math.matrix();
+    let b1 = math.matrix();
+    for ( let i = 0; i < handles.length; i++ )
     {
       b1Handles.set( [ 2 * i, 0 ], this.w * handles[ i ].position.x );
       b1Handles.set( [ 2 * i + 1, 0 ], this.w * handles[ i ].position.y );
@@ -233,21 +233,21 @@ export default class LinearAlgebra
 
   buildB2( handles, edges, newVertices, origVertices, axis )
   {
-    var axis = ( axis == 'x' ? 0 : 1 );
-    var b2EdgeVectors = math.matrix();
-    var b2Handles = math.matrix();
-    var b2 = math.matrix();
-    var Tks = this.getTks( edges, this.Gks, newVertices );
+    var axisFlag = ( axis == 'x' ? 0 : 1 );
+    let b2EdgeVectors = math.matrix();
+    let b2Handles = math.matrix();
+    let b2 = math.matrix();
+    let Tks = this.getTks( edges, this.Gks, newVertices );
 
-    for ( var i = 0; i < edges.length; i++ )
+    for ( let i = 0; i < edges.length; i++ )
     {
-      var ek = getEdgeVectorFromEdge( edges[ i ], origVertices );
-      b2EdgeVectors.set( [ i, 0 ], math.multiply( Tks[ i ], ek ).get( [ axis, 0 ] ) );
+      let ek = getEdgeVectorFromEdge( edges[ i ], origVertices );
+      b2EdgeVectors.set( [ i, 0 ], math.multiply( Tks[ i ], ek ).get( [ axisFlag, 0 ] ) );
     }
 
-    for ( var i = 0; i < handles.length; i++ )
+    for ( let i = 0; i < handles.length; i++ )
     {
-      b2Handles.set( [ i, 0 ], ( axis == 0 ? this.w * handles[ i ].position.x : this.w * handles[ i ].position.y ) )
+      b2Handles.set( [ i, 0 ], ( axisFlag == 0 ? this.w * handles[ i ].position.x : this.w * handles[ i ].position.y ) )
     }
 
     b2 = math.concat( b2EdgeVectors, b2Handles, 0 );
@@ -257,26 +257,26 @@ export default class LinearAlgebra
 
   getTks( edges, Gks, vertices )
   {
-    var Tks = [];
-    for ( var i = 0; i < edges.length; i++ )
+    let Tks = [];
+    for ( let i = 0; i < edges.length; i++ )
     {
-      var edgeNeighbors = math.matrix();
-      for ( var k = 0; k < edges[ i ].neighbors.length; k++ )
+      let edgeNeighbors = math.matrix();
+      for ( let k = 0; k < edges[ i ].neighbors.length; k++ )
       {
         edgeNeighbors.set( [ 2 * k, 0 ], getVertex( edges[ i ].neighbors[ k ], vertices ).x );
         edgeNeighbors.set( [ 2 * k + 1, 0 ], getVertex( edges[ i ].neighbors[ k ], vertices ).y );
       }
 
-      var gkTerm = this.GkTerms[ i ];
+      let gkTerm = this.GkTerms[ i ];
       let gkTermTopTwoRows = math.evaluate( 'gkTerm[1:2,:]', {
         gkTerm,
       } );
 
-      var cksk = math.multiply( gkTermTopTwoRows, edgeNeighbors );
-      var ck = cksk.get( [ 0, 0 ] );
-      var sk = cksk.get( [ 1, 0 ] );
-      var Tk = math.matrix( [ [ ck, sk ], [ -sk, ck ] ] );
-      var normalizationTerm = math.sqrt( math.add( math.square( ck ), math.square( sk ) ) );
+      let cksk = math.multiply( gkTermTopTwoRows, edgeNeighbors );
+      let ck = cksk.get( [ 0, 0 ] );
+      let sk = cksk.get( [ 1, 0 ] );
+      let Tk = math.matrix( [ [ ck, sk ], [ -sk, ck ] ] );
+      let normalizationTerm = math.sqrt( math.add( math.square( ck ), math.square( sk ) ) );
       Tk = math.dotDivide( Tk, normalizationTerm );
       Tks.push( Tk );
     }
@@ -285,8 +285,8 @@ export default class LinearAlgebra
 
   getGkMatrix( edge, vertices, includeTranslation )
   {
-    var vi, vj, vl, vr = null;
-    var gk = null;
+    let vi, vj, vl, vr = null;
+    let gk = null;
     if ( includeTranslation )
     {
       if ( edge.isBorderEdge )
