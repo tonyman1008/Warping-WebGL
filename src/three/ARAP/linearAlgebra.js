@@ -44,22 +44,26 @@ export default class LinearAlgebra
 
   compilation( handles, vertices, barycentricMode, _callback )
   {
-    if(handles.length ==0)
+    if ( handles.length == 0 )
       return;
-
+    
+    // console.time( 'buildC12' )
     this.C1 = this.buildC1( handles, vertices, barycentricMode );
     this.C2 = this.buildC2( handles, vertices, barycentricMode );
+    // console.timeEnd( 'buildC12' )
 
+    
     this.A1 = math.concat( this.L1, this.C1, 0 );
     this.A2 = math.concat( this.L2, this.C2, 0 );
-
+    
     this.A1 = math.matrix( this.A1.toArray() );
     this.A2 = math.matrix( this.A2.toArray() );
-
+    
     const A1_Transpose = math.transpose( this.A1 );
     const A2_Transpose = math.transpose( this.A2 );
     this.A1Term = math.multiply( math.inv( math.multiply( A1_Transpose, this.A1 ) ), A1_Transpose )
     this.A2Term = math.multiply( math.inv( math.multiply( A2_Transpose, this.A2 ) ), A2_Transpose )
+
     // this.A1Term = ( A1_Transpose.multiply( this.A1 ) ).inv().multiply( A1_Transpose );
     // this.A2Term = ( A2_Transpose.multiply( this.A2 ) ).inv().multiply( A2_Transpose );
 
@@ -73,6 +77,7 @@ export default class LinearAlgebra
 
   buildC1( handles, vertices, barycentricMode )
   {
+
     let C1 = math.zeros( handles.length * 2, vertices.length * 2 );
     if ( barycentricMode )
     {
@@ -93,6 +98,7 @@ export default class LinearAlgebra
         C1.set( [ 2 * i + 1, 2 * handles[ i ].v_index + 1 ], this.w );
       }
     }
+
     return C1;
   }
 
@@ -347,7 +353,7 @@ export default class LinearAlgebra
     return gk;
   }
 
-  resetDeformedVertices(deformedVertices)
+  resetDeformedVertices( deformedVertices )
   {
     this.deformedVertices = deformedVertices
   }

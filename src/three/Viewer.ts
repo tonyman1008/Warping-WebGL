@@ -6,6 +6,7 @@ import MeshEditor from './MeshEditor';
 import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
 import testImgPath from 'assets/balenciagaBag_crop/img01.png';
+import testImgPath2 from 'assets/balenciagaBag_crop/img71.png';
 import ARAP from './ARAP/ARAP';
 
 export default class Viewer
@@ -21,6 +22,8 @@ export default class Viewer
     datGUI: dat;
 
     testMesh: GridMesh3D;
+    leftTargetMesh: GridMesh3D;
+    rightargetMesh: GridMesh3D;
 
     testWarpDegree: number;
     defaultPositionAttribute: THREE.BufferAttribute;
@@ -34,7 +37,7 @@ export default class Viewer
         //initial set manager
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
-        this.viewportControls.camera.position.set(0, 0, 1.5)
+        this.viewportControls.camera.position.set(0, 0, 2.2)
         this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();
@@ -59,10 +62,18 @@ export default class Viewer
         const ARAPFolder = this.datGUI.addFolder('ARAP');
         ARAPFolder.add(this.ARAP, 'enableARAP');
         ARAPFolder.add(this.ARAP, 'barycentricCoordMode').name('barycentricMode').onChange(() => this.ARAP.onModeChange());
+        ARAPFolder.add(this.ARAP, 'setAllHandlesVisible').name('handlesVisible');
         ARAPFolder.add(this.ARAP, 'resetARAP');
 
         this.datGUI.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrameVisible')
         this.datGUI.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
+
+        this.datGUI.add(this, 'setTargetMeshVisible').name('TargetMeshVisible')
+    }
+
+    setTargetMeshVisible()
+    {
+        this.leftTargetMesh.visible = !this.leftTargetMesh.visible;
     }
 
     async testCreateMesh()
@@ -70,6 +81,12 @@ export default class Viewer
         //initial TEST
         const blendColor = new THREE.Vector4(1, 1, 1, 1);
         this.testMesh = await this.objectMgr.createGridMesh(testImgPath, blendColor);
+
+        const blendColor2 = new THREE.Vector4(0, 255, 0, 0.5);
+        this.leftTargetMesh = await this.objectMgr.createGridMesh(testImgPath2, blendColor2);
+        this.leftTargetMesh.translateZ(-0.0001)
+        this.leftTargetMesh.setVerticesPointsVisible(false)
+        this.leftTargetMesh.setWireFrameVisible(false)
 
         // store initial position buffer attribute
         const geo = this.testMesh.geometry as THREE.PlaneBufferGeometry;

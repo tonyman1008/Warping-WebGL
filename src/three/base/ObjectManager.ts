@@ -39,7 +39,7 @@ export default class ObjectManager
 
     public async createGridMesh(testImgPath, blendColor)
     {
-        const geo = new THREE.PlaneBufferGeometry(1, 1, 8, 8);
+        const geo = new THREE.PlaneBufferGeometry(1.6, 1.2, 8, 8);
 
         const textureMap = await this.textureLoader.loadAsync(testImgPath);
         textureMap.wrapS = THREE.RepeatWrapping;
@@ -88,19 +88,25 @@ export default class ObjectManager
 
     public setAllMeshWireFrameVisible()
     {
-        this.gridMeshAry.forEach((gird) =>
-        {
-            gird.setWireFrameVisible(!this.allWireFrameVisible)
-        })
+        // this.gridMeshAry.forEach((gird) =>
+        // {
+        //     gird.setWireFrameVisible(!this.allWireFrameVisible)
+        // })
+        // this.allWireFrameVisible = !this.allWireFrameVisible;
+
+        this.gridMeshAry[0].setWireFrameVisible(!this.allWireFrameVisible)
         this.allWireFrameVisible = !this.allWireFrameVisible;
     }
 
     public setAllMeshVerticesPointsVisible(option: boolean)
     {
-        this.gridMeshAry.forEach((gird) =>
-        {
-            gird.setVerticesPointsVisible(!this.allVerticesVisible)
-        })
+        // this.gridMeshAry.forEach((gird) =>
+        // {
+        //     gird.setVerticesPointsVisible(!this.allVerticesVisible)
+        // })
+        // this.allVerticesVisible = !this.allVerticesVisible;
+
+        this.gridMeshAry[0].setVerticesPointsVisible(!this.allVerticesVisible)
         this.allVerticesVisible = !this.allVerticesVisible;
     }
 }

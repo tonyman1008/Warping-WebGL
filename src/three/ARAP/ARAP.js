@@ -22,6 +22,7 @@ export default class ARAP
         this.barycentricCoordMode = false;
         this.clickedOnHandle = false;
         this.enableARAP = true;
+        this.handlesVisible = true;
         this.w = 1000; // TODO set weight
 
         // this.keyFrameMode = false; // TODO
@@ -436,7 +437,7 @@ export default class ARAP
         const geometry = new THREE.SphereGeometry( 1, 32, 32 );
         const material = new THREE.MeshPhongMaterial( { shininess: 1 } );
         const newHandle = new THREE.Mesh( geometry, material );
-
+        
         newHandle.position.set( vertex.x, vertex.y, vertex.z );
         newHandle.scale.set( uniformScale, uniformScale, uniformScale );
         newHandle.v_index = index;
@@ -500,6 +501,13 @@ export default class ARAP
         return newHandle;
     }
 
+    setAllHandlesVisible(){
+        this.handles.forEach((handle)=>{
+            handle.visible = !this.handlesVisible;
+        })
+        this.handlesVisible = !this.handlesVisible
+    }
+
     onModeChange(){
         this.eraseAllHandle();
         console.log( 'Mode change! Removing all handle marker! Please Wait..' );
@@ -527,6 +535,7 @@ export default class ARAP
         this.model.geometry.attributes.position.needsUpdate= true;
         this.deformedVertices = cloneVertices(this.testGeometry.vertices);
         this.LinearAlgebra.resetDeformedVertices(this.deformedVertices)
+        this.handlesVisible = true;
         this.eraseAllHandle();
     }
 
