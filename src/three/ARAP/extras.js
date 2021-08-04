@@ -51,7 +51,7 @@ function getVertex(i,vertices){
 }
 
 function getEdgeVectorFromEdge(edge,vertices){
-  let edgeVector = math.matrix();
+  let edgeVector = math.sparse();
   let edgeEndVertex = getVertex(edge.end,vertices);
   let edgeStartVertex = getVertex(edge.start,vertices);
   
@@ -98,7 +98,7 @@ function cloneHandles(handles){
 }
 
 function getNeighborVerticesCoordinates(neighbors,vertices){
-  let vertexCoordinates = math.matrix();
+  let vertexCoordinates = math.sparse();
   let vertex = null;
   for (let k = 0; k < neighbors.length; k++) {
     vertex = getVertex(neighbors[k],vertices);
@@ -127,12 +127,12 @@ function createTrianglesFromFaces(faces, vertices){
 }
 
 // // This is legacy code
-//  function pseudoInverse(matrix){
-//   let pseudoInverse = math.matrix();
-//   let res = numeric.svd(matrix.toArray());
-//   let U = math.matrix(res.U);
-//   let S = math.matrix(res.S);
-//   let V = math.matrix(res.V);
+//  function pseudoInverse(sparse){
+//   let pseudoInverse = math.sparse();
+//   let res = numeric.svd(sparse.toArray());
+//   let U = math.sparse(res.U);
+//   let S = math.sparse(res.S);
+//   let V = math.sparse(res.V);
 //   let tol = 5.3291e-15;
 //   for (let i = 0; i < S.size()[0]; i++) {
 //     if(S.get([i]) > tol){

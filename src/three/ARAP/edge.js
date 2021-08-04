@@ -11,7 +11,7 @@ class Edge
 
   setNeighbors( neighbors )
   {
-    this.HNeighbors = math.matrix();
+    this.HNeighbors = math.sparse();
     this.neighbors = neighbors;
     for ( let i = 0; i < neighbors.length; i++ )
     {

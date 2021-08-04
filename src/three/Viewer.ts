@@ -5,9 +5,10 @@ import OpenMesh from "OpenMesh";
 import MeshEditor from './MeshEditor';
 import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
-import testImgPath from 'assets/balenciagaBag_crop/img01.png';
-import testImgPath2 from 'assets/balenciagaBag_crop/img71.png';
+import testImgPath from 'assets/dragon360p/dragon_1.png';
+import testImgPath2 from 'assets/dragon360p/dragon_15.png';
 import ARAP from './ARAP/ARAP';
+import matchPointsData from 'assets/MatchPointsData/dragon1-15/MatchPoints.json';
 
 export default class Viewer
 {
@@ -37,7 +38,7 @@ export default class Viewer
         //initial set manager
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
-        this.viewportControls.camera.position.set(0, 0, 2.2)
+        this.viewportControls.camera.position.set(0, 0, 120)
         this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();
@@ -45,11 +46,12 @@ export default class Viewer
         this.objectMgr = new ObjectManager(this.scene, this.openMeshController);
         this.datGUI = new dat.GUI();
 
-        this.ARAP = new ARAP(this.viewportControls.camera, this.scene);
+        this.ARAP = new ARAP(this.viewportControls.camera, this.scene, this.container);
 
         this.testWarpDegree = 0;
         this.testCreateMesh();
         this.setGUI()
+        this.loadMatchPoitns();
     }
 
     setGUI()
@@ -61,9 +63,16 @@ export default class Viewer
 
         const ARAPFolder = this.datGUI.addFolder('ARAP');
         ARAPFolder.add(this.ARAP, 'enableARAP');
-        ARAPFolder.add(this.ARAP, 'barycentricCoordMode').name('barycentricMode').onChange(() => this.ARAP.onModeChange());
+        ARAPFolder.add(this.ARAP, 'barycentricCoordMode').name('barycentricMode').onChange(() => this.ARAP.onModeChange()).listen();
         ARAPFolder.add(this.ARAP, 'setAllHandlesVisible').name('handlesVisible');
         ARAPFolder.add(this.ARAP, 'resetARAP');
+        ARAPFolder.add(this.ARAP, 'testMatchPoints');
+        ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry');
+        ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 100, 1).name('weight');
+        ARAPFolder.add(this.ARAP, 'warpRatio', 0, 1, 0.1).onChange(() =>
+        {
+            this.ARAP.warpMatchPoints();
+        })
 
         this.datGUI.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrameVisible')
         this.datGUI.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
@@ -93,12 +102,36 @@ export default class Viewer
         const positionAttribute = geo.getAttribute('position');
         this.defaultPositionAttribute = positionAttribute.clone();
 
-        console.log(this.testMesh);
+        // console.log(this.testMesh);
         this.meshEditor.load(this.testMesh, this.testMesh.verticesPoints, this.testMesh.triMesh);
         this.scene.add(this.meshEditor.selectedFacesMeshes);
 
         //ARAP test
         this.ARAP.initializeFromMesh(this.testMesh);
+    }
+
+    //TODO: rewrite format
+    loadMatchPoitns()
+    {
+        const jsonArray = matchPointsData.matchPoints
+        for (let i = 0; i < jsonArray.length; i++)
+        {
+            //source
+            const srcX = (jsonArray[i].keyPointOne[0] - 800 / 2) / 10;
+            const srcY = (600 / 2 - jsonArray[i].keyPointOne[1]) / 10;
+            const srcZ = 0;
+            const srcMatchPos = new THREE.Vector3(srcX, srcY, srcZ)
+
+            //target
+            const tgtX = (jsonArray[i].keyPointTwo[0] - 800 / 2) / 10;
+            const tgtY = (600 / 2 - jsonArray[i].keyPointTwo[1]) / 10;
+            const tgtZ = 0;
+            const tgtMatchPos = new THREE.Vector3(tgtX, tgtY, tgtZ)
+
+            const matchPosPair = { src: srcMatchPos, tgt: tgtMatchPos };
+            this.ARAP.matchPointsArray.push(matchPosPair);
+        }
+        console.log("match points length", this.ARAP.matchPointsArray.length);
     }
 
     warp()

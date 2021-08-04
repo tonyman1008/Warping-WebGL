@@ -24,6 +24,8 @@ export default class ObjectManager
     allWireFrameVisible: boolean = true;
     allVerticesVisible: boolean = true;
 
+    gridSegments: number;
+
     constructor(iScene: THREE.Scene, iOpenMesh: OpenMesh)
     {
 
@@ -35,11 +37,12 @@ export default class ObjectManager
 
         this.objExporter = new OBJExporter();
         this.textureLoader = new THREE.TextureLoader();
+        this.gridSegments = 20;
     }
 
     public async createGridMesh(testImgPath, blendColor)
     {
-        const geo = new THREE.PlaneBufferGeometry(1.6, 1.2, 8, 8);
+        const geo = new THREE.PlaneBufferGeometry(80, 60, this.gridSegments, this.gridSegments);
 
         const textureMap = await this.textureLoader.loadAsync(testImgPath);
         textureMap.wrapS = THREE.RepeatWrapping;
@@ -80,7 +83,7 @@ export default class ObjectManager
         // make sure the obj format is only the target mesh
         const secondObjTagFormatIndex = originObjFormat.indexOf('o ', 1);
         const removeChildrenObjFormat = originObjFormat.substring(0, secondObjTagFormatIndex)
-        console.log(removeChildrenObjFormat);
+        // console.log(removeChildrenObjFormat);
         const meshConnectivity = await this.openMeshController.read(removeChildrenObjFormat, customtriMesh);
 
         return meshConnectivity
