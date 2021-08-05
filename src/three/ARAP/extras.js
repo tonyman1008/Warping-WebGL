@@ -2,50 +2,6 @@ import * as math from 'mathjs'
 import {Edge} from './edge'
 import * as THREE from 'three'
 
-// function renderAxes(){
-//   let colors = ['red','green','blue'];
-//   for (let i = 0; i < 3; i++) {
-//     let geometry = new THREE.Geometry();
-//     let axis_color = colors[i];
-//     switch (i) {
-//       case 0:
-//         geometry.vertices.push(new THREE.Vector3(-5, 0, 0));
-//         geometry.vertices.push(new THREE.Vector3(5, 0, 0));
-//         break;
-//       case 1:
-//         geometry.vertices.push(new THREE.Vector3(0, -5, 0));
-//         geometry.vertices.push(new THREE.Vector3(0, 5, 0));
-//         break;
-//       case 2:
-//         geometry.vertices.push(new THREE.Vector3(0, 0, 5));
-//         geometry.vertices.push(new THREE.Vector3(0, 0, -5));
-//         break;
-//     };
-//     let material = new THREE.LineBasicMaterial({ color: axis_color }); 
-//     let axis =  new THREE.Line(geometry, material);
-//     scene.add(axis);
-//   };
-// }
-
-//???????
-// function addNeighbors(neighbors,edge,face,faces){
-//   let face =  faces[edge.parentFaceIndex];
-//   let vertex1 = face.a;
-//   let vertex2 = face.b;
-//   let vertex3 = face.c;
-  
-//   if(!neighbors.includes(vertex1)){ neighbors.push(vertex1) };
-//   if(!neighbors.includes(vertex2)){ neighbors.push(vertex2) };
-//   if(!neighbors.includes(vertex3)){ neighbors.push(vertex3) };
-  
-//   return neighbors;
-// }
-
-// function drawEdge(edge,model){
-//   drawMarker(createMarker(model.geometry.vertices[edge.start],edge.start));
-//   drawMarker(createMarker(model.geometry.vertices[edge.end],edge.end));
-// }
-
 function getVertex(i,vertices){
   return vertices[i];
 }
@@ -125,23 +81,5 @@ function createTrianglesFromFaces(faces, vertices){
   
   return triangles;
 }
-
-// // This is legacy code
-//  function pseudoInverse(sparse){
-//   let pseudoInverse = math.sparse();
-//   let res = numeric.svd(sparse.toArray());
-//   let U = math.sparse(res.U);
-//   let S = math.sparse(res.S);
-//   let V = math.sparse(res.V);
-//   let tol = 5.3291e-15;
-//   for (let i = 0; i < S.size()[0]; i++) {
-//     if(S.get([i]) > tol){
-//       S.set([i],1/S.get([i]));
-//     }
-//   }
-//   S = math.diag(S);
-//   pseudoInverse = math.multiply(math.multiply(V,S),math.transpose(U));
-//   return pseudoInverse;
-// }
 
 export {getVertex,getEdgeVectorFromEdge,isBorderEdge,cloneVertices,cloneHandles,getNeighborVerticesCoordinates,createTrianglesFromFaces}
