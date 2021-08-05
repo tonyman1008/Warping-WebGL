@@ -1,5 +1,5 @@
 import * as math from 'mathjs';
-import { getVertex, getEdgeVectorFromEdge } from './extras';
+import { getVertex, getEdgeVectorFromEdge, cloneVertices } from './extras';
 
 export default class LinearAlgebra
 {
@@ -26,7 +26,6 @@ export default class LinearAlgebra
   {
     // add
     this.deformedVertices = deformedVertices;
-
     let gk, hk, gkTerm = null;
     for ( let i = 0; i < edges.length; i++ )
     {
@@ -46,15 +45,10 @@ export default class LinearAlgebra
     if ( handles.length == 0 )
       return;
 
-    // console.time( 'buildC12' )
     this.C1 = this.buildC1( handles, vertices, barycentricMode );
     this.C2 = this.buildC2( handles, vertices, barycentricMode );
-    // console.timeEnd( 'buildC12' )
-
-
     this.A1 = math.concat( this.L1, this.C1, 0 );
     this.A2 = math.concat( this.L2, this.C2, 0 );
-
     this.A1 = math.sparse( this.A1.toArray() );
     this.A2 = math.sparse( this.A2.toArray() );
 
@@ -77,9 +71,6 @@ export default class LinearAlgebra
 
     // this.A1Term = math.multiply( math.inv( math.multiply( A1_Transpose, this.A1 ) ), A1_Transpose )
     // this.A2Term = math.multiply( math.inv( math.multiply( A2_Transpose, this.A2 ) ), A2_Transpose )
-
-    // this.A1Term = ( A1_Transpose.multiply( this.A1 ) ).inv().multiply( A1_Transpose );
-    // this.A2Term = ( A2_Transpose.multiply( this.A2 ) ).inv().multiply( A2_Transpose );
 
     _callback();
   }
@@ -207,15 +198,14 @@ export default class LinearAlgebra
   {
     b1 = math.sparse( b1.toArray() );
     let res = math.multiply( this.A1Term, b1 );
-    // let res = this.A1Term.multiply( b1 );
-    for ( let i = 0; i < this.deformedVertices.length; i++ )
+
+    const tempDeformedVertices = cloneVertices( this.deformedVertices )
+    for ( let i = 0; i < tempDeformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = math.subset( res, math.index( 2 * i, 0 ) );
-      this.deformedVertices[ i ].y = math.subset( res, math.index( 2 * i + 1, 0 ) );
-      // this.deformedVertices[ i ].x = res.get( 2 * i, 0 );
-      // this.deformedVertices[ i ].y = res.get( 2 * i + 1, 0 );
+      tempDeformedVertices[ i ].x = math.subset( res, math.index( 2 * i, 0 ) );
+      tempDeformedVertices[ i ].y = math.subset( res, math.index( 2 * i + 1, 0 ) );
     }
-    return this.deformedVertices;
+    return tempDeformedVertices;
   }
 
   scaleAdjustmentRenameMe( b2x, b2y )
@@ -224,17 +214,14 @@ export default class LinearAlgebra
     b2y = math.sparse( b2y.toArray() );
     let resx = math.multiply( this.A2Term, b2x );
     let resy = math.multiply( this.A2Term, b2y );
-    // let resx = this.A2Term.multiply( b2x );
-    // let resy = this.A2Term.multiply( b2y );
 
-    for ( let i = 0; i < this.deformedVertices.length; i++ )
+    const tempDeformedVertices = cloneVertices( this.deformedVertices )
+    for ( let i = 0; i < tempDeformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = math.subset( resx, math.index( i, 0 ) )
-      this.deformedVertices[ i ].y = math.subset( resy, math.index( i, 0 ) )
-      // this.deformedVertices[ i ].x = resx.get( i, 0 );
-      // this.deformedVertices[ i ].y = resy.get( i, 0 );
+      tempDeformedVertices[ i ].x = math.subset( resx, math.index( i, 0 ) )
+      tempDeformedVertices[ i ].y = math.subset( resy, math.index( i, 0 ) )
     }
-    return this.deformedVertices;
+    return tempDeformedVertices;
   }
 
   buildB1( handles, edges )
@@ -381,30 +368,28 @@ export default class LinearAlgebra
   //
   manipulation_test( handlesPos, edges, origVertices )
   {
-    
-      let b1 = this.buildB1_test( handlesPos, edges );
-      let similarityTransformResult = this.similarityTransform_test( b1 );
+    let b1 = this.buildB1_test( handlesPos, edges );
+    let similarityTransformResult = this.similarityTransform_test( b1 );
 
-      let b2x = this.buildB2_test( handlesPos, edges, similarityTransformResult, origVertices, 'x' );
-      let b2y = this.buildB2_test( handlesPos, edges, similarityTransformResult, origVertices, 'y' );
+    let b2x = this.buildB2_test( handlesPos, edges, similarityTransformResult, origVertices, 'x' );
+    let b2y = this.buildB2_test( handlesPos, edges, similarityTransformResult, origVertices, 'y' );
 
-      let scaleAdjustmentResult = this.scaleAdjustmentRenameMe_test( b2x, b2y );
-      return scaleAdjustmentResult;
+    let scaleAdjustmentResult = this.scaleAdjustmentRenameMe_test( b2x, b2y );
+    return  scaleAdjustmentResult ;
   }
 
   similarityTransform_test( b1 )
   {
     b1 = math.sparse( b1.toArray() );
     let res = math.multiply( this.A1Term, b1 );
-    // let res = this.A1Term.multiply( b1 );
-    for ( let i = 0; i < this.deformedVertices.length; i++ )
+
+    const tempDeformedVertices = cloneVertices( this.deformedVertices )
+    for ( let i = 0; i < tempDeformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = math.subset( res, math.index( 2 * i, 0 ) );
-      this.deformedVertices[ i ].y = math.subset( res, math.index( 2 * i + 1, 0 ) );
-      // this.deformedVertices[ i ].x = res.get( 2 * i, 0 );
-      // this.deformedVertices[ i ].y = res.get( 2 * i + 1, 0 );
+      tempDeformedVertices[ i ].x = math.subset( res, math.index( 2 * i, 0 ) );
+      tempDeformedVertices[ i ].y = math.subset( res, math.index( 2 * i + 1, 0 ) );
     }
-    return this.deformedVertices;
+    return tempDeformedVertices;
   }
 
   scaleAdjustmentRenameMe_test( b2x, b2y )
@@ -413,17 +398,14 @@ export default class LinearAlgebra
     b2y = math.sparse( b2y.toArray() );
     let resx = math.multiply( this.A2Term, b2x );
     let resy = math.multiply( this.A2Term, b2y );
-    // let resx = this.A2Term.multiply( b2x );
-    // let resy = this.A2Term.multiply( b2y );
 
-    for ( let i = 0; i < this.deformedVertices.length; i++ )
+    const tempDeformedVertices = cloneVertices( this.deformedVertices )
+    for ( let i = 0; i < tempDeformedVertices.length; i++ )
     {
-      this.deformedVertices[ i ].x = math.subset( resx, math.index( i, 0 ) )
-      this.deformedVertices[ i ].y = math.subset( resy, math.index( i, 0 ) )
-      // this.deformedVertices[ i ].x = resx.get( i, 0 );
-      // this.deformedVertices[ i ].y = resy.get( i, 0 );
+      tempDeformedVertices[ i ].x = math.subset( resx, math.index( i, 0 ) )
+      tempDeformedVertices[ i ].y = math.subset( resy, math.index( i, 0 ) )
     }
-    return this.deformedVertices;
+    return tempDeformedVertices
   }
 
   buildB1_test( handlesPos, edges )

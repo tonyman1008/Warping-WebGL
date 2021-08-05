@@ -5,10 +5,11 @@ import OpenMesh from "OpenMesh";
 import MeshEditor from './MeshEditor';
 import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
-import testImgPath from 'assets/dragon360p/dragon_1.png';
-import testImgPath2 from 'assets/dragon360p/dragon_15.png';
+import testImgPath from 'assets/balenciagaBag_crop/img01.png';
+import testImgPath2 from 'assets/balenciagaBag_crop/img02.png';
 import ARAP from './ARAP/ARAP';
-import matchPointsData from 'assets/MatchPointsData/dragon1-15/MatchPoints.json';
+// import matchPointsData from 'assets/MatchPointsData/balenciagabag/fourCorner.json';
+import matchPointsData from 'assets/MatchPointsData/balenciagabag/3/MatchPoints.json';
 
 export default class Viewer
 {
@@ -38,13 +39,13 @@ export default class Viewer
         //initial set manager
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
-        this.viewportControls.camera.position.set(0, 0, 120)
+        this.viewportControls.camera.position.set(0, 0, 140)
         this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();
         this.meshEditor = new MeshEditor(this.viewportControls.camera);
         this.objectMgr = new ObjectManager(this.scene, this.openMeshController);
-        this.datGUI = new dat.GUI();
+        this.datGUI = new dat.GUI({ width: 300 });
 
         this.ARAP = new ARAP(this.viewportControls.camera, this.scene, this.container);
 
@@ -56,28 +57,40 @@ export default class Viewer
 
     setGUI()
     {
+        //Basic gui setting
+        this.datGUI.width = '450px'
+
+
         const uniformWarpFolder = this.datGUI.addFolder('UniformWarp');
         uniformWarpFolder.add(this, 'testWarpDegree', -30, 30, 1).name('warpDeg').onChange(this.warp.bind(this));
         uniformWarpFolder.add(this, 'resetViewPort');
         uniformWarpFolder.add(this, 'resetWarp');
 
         const ARAPFolder = this.datGUI.addFolder('ARAP');
+        ARAPFolder.open();
         ARAPFolder.add(this.ARAP, 'enableARAP');
         ARAPFolder.add(this.ARAP, 'barycentricCoordMode').name('barycentricMode').onChange(() => this.ARAP.onModeChange()).listen();
         ARAPFolder.add(this.ARAP, 'setAllHandlesVisible').name('handlesVisible');
         ARAPFolder.add(this.ARAP, 'resetARAP');
-        ARAPFolder.add(this.ARAP, 'testMatchPoints');
-        ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry');
+        ARAPFolder.add(this.ARAP, 'testMatchPoints').name('matchVertices');
+        ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry').name('matchBarycentry')
+        ARAPFolder.add(this.ARAP, 'preComputeWarpFrame').name('computeFrame');
         ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 100, 1).name('weight');
         ARAPFolder.add(this.ARAP, 'warpRatio', 0, 1, 0.1).onChange(() =>
         {
             this.ARAP.warpMatchPoints();
         })
+        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 9, 1).onChange(() =>
+        {
+            this.ARAP.warpFrame();
+        })
 
-        this.datGUI.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrameVisible')
-        this.datGUI.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
+        const basicFunctionFolder = this.datGUI.addFolder('Basic Function');
+        basicFunctionFolder.open();
+        basicFunctionFolder.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrameVisible')
+        basicFunctionFolder.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
 
-        this.datGUI.add(this, 'setTargetMeshVisible').name('TargetMeshVisible')
+        basicFunctionFolder.add(this, 'setTargetMeshVisible').name('TargetMeshVisible')
     }
 
     setTargetMeshVisible()
@@ -204,6 +217,7 @@ export default class Viewer
         this.viewportControls.render(this.scene);
     }
 
+    //TODO
     clear()
     {
 

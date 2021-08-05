@@ -43,12 +43,14 @@ export default class ARAP
         this.handleTargetPosAry = [];
         this.handlesPos = [];
         this.warpRatio = 0;
+        this.warpFrameIndex = 0;
+        this.preComputeDeformedVerticesAry = [];
     }
 
     getNearestHandleIndex( x, y, vertices )
     {
         const mouseTarget = this.getPointInWorldCoordinates( x, y );
-        console.log(mouseTarget);
+        console.log( mouseTarget );
         let distanceFromHandle = 0;
         let distanceTolerance = this.camera.position.z / 100;
         let closestHandleIndex = null;
@@ -271,8 +273,9 @@ export default class ARAP
     }
 
     //test
-    getNearestHandleIndexOnWorldPos(worldPos){
-        
+    getNearestHandleIndexOnWorldPos( worldPos )
+    {
+
         let distanceFromHandle = 0;
         let distanceTolerance = this.camera.position.z / 100;
         let closestHandleIndex = null;
@@ -351,7 +354,7 @@ export default class ARAP
             {
                 if ( nearestHandleIndex == null )
                 {
-                    newHandle = this.createHandleAtPosition( srcPos,this.model.geometry.faces, this.deformedVertices );
+                    newHandle = this.createHandleAtPosition( srcPos, this.model.geometry.faces, this.deformedVertices );
                     this.handles.push( newHandle );
                     this.handleOriginPosAry.push( newHandle.position.clone() );
                     this.handleTargetPosAry.push( this.matchPointsArray[ i ].tgt );
@@ -367,14 +370,58 @@ export default class ARAP
             } );
     }
 
+    preComputeWarpFrame()
+    {
+        if ( this.handles.length == 0 )
+            return;
+
+        const frameAmount = 10;
+        // interpolation between frame 0 & fame N
+        const startFrameVertices = cloneVertices( this.originalVertices )
+        this.preComputeDeformedVerticesAry.push( startFrameVertices )
+
+        console.time( 'preComputeWarpFrame' )
+        for ( let i = 1; i < frameAmount; i++ )
+        {
+            const handlesPos = [];
+            const interpolationRatio = i / frameAmount;
+            for ( let j = 0; j < this.handles.length; j++ )
+            {
+                const newHandlePos = new THREE.Vector3().lerpVectors( this.handleOriginPosAry[ j ], this.handleTargetPosAry[ j ], interpolationRatio )
+                handlesPos.push( newHandlePos );
+            }
+            const newVerticesFrame =  this.LinearAlgebra.manipulation_test( handlesPos, this.edges, this.originalVertices );
+            this.preComputeDeformedVerticesAry.push(newVerticesFrame);
+        }
+        console.timeEnd( 'preComputeWarpFrame' )
+    }
+
+    warpFrame()
+    {
+        if ( this.preComputeDeformedVerticesAry.length == 0 )
+            return;
+
+        const index = Math.round( this.warpFrameIndex );
+        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ index ].length; i++ )
+        {
+            this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ index ][ i ].x, this.preComputeDeformedVerticesAry[ index ][ i ].y );
+            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ index ][ i ].x
+            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ index ][ i ].y
+        }
+        this.model.geometry.attributes.position.needsUpdate = true;
+    }
+
     warpMatchPoints()
     {
+        if ( this.handles.length == 0 )
+            return;
+
         const handlesPos = [];
         for ( let i = 0; i < this.handles.length; i++ )
         {
-            const newHandlePos = new THREE.Vector3().lerpVectors( this.handleOriginPosAry[ i ], this.handleTargetPosAry[ i ],this.warpRatio  )
+            const newHandlePos = new THREE.Vector3().lerpVectors( this.handleOriginPosAry[ i ], this.handleTargetPosAry[ i ], this.warpRatio )
             handlesPos.push( newHandlePos );
-            this.handles[i].position.copy(newHandlePos);
+            this.handles[ i ].position.copy( newHandlePos );
         }
         let newVertices = this.LinearAlgebra.manipulation_test( handlesPos, this.edges, this.originalVertices );
         for ( let i = 0; i < newVertices.length; i++ )
