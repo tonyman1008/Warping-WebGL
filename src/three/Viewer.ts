@@ -89,8 +89,8 @@ export default class Viewer
         basicFunctionFolder.open();
         basicFunctionFolder.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrameVisible')
         basicFunctionFolder.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
-
         basicFunctionFolder.add(this, 'setTargetMeshVisible').name('TargetMeshVisible')
+        basicFunctionFolder.add(this.objectMgr, 'updateMeshTextureMapByIndex')
     }
 
     setTargetMeshVisible()
@@ -102,13 +102,14 @@ export default class Viewer
     {
         //initial TEST
         const blendColor = new THREE.Vector4(1, 1, 1, 1);
-        this.testMesh = await this.objectMgr.createGridMesh(testImgPath, blendColor);
+        this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2, blendColor);
 
         const blendColor2 = new THREE.Vector4(0, 255, 0, 0.5);
-        this.leftTargetMesh = await this.objectMgr.createGridMesh(testImgPath2, blendColor2);
+        this.leftTargetMesh = await this.objectMgr.createGridMesh(testImgPath2, testImgPath, blendColor2);
         this.leftTargetMesh.translateZ(-0.0001)
         this.leftTargetMesh.setVerticesPointsVisible(false)
         this.leftTargetMesh.setWireFrameVisible(false)
+        this.leftTargetMesh.visible = false
 
         // store initial position buffer attribute
         const geo = this.testMesh.geometry as THREE.PlaneBufferGeometry;

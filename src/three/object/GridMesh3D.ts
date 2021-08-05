@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import TriMesh from 'OpenMesh/Mesh/TriMeshT';
+import testImgPath2 from 'assets/balenciagaBag_crop/img02.png';
 
 export default class GridMesh3D extends THREE.Mesh
 {
@@ -9,6 +10,8 @@ export default class GridMesh3D extends THREE.Mesh
     defaultVertexColor: THREE.Color;
     wireFrameRenderOrder: number;
     verticesPointsRenderOrder: number;
+    sourceTextureMap: THREE.Texture;
+    targetTextureMap: THREE.Texture;
 
     public verticesPoints: THREE.Points;
     public wireframe: THREE.Mesh;
@@ -31,6 +34,8 @@ export default class GridMesh3D extends THREE.Mesh
         this.defaultVertexColor = new THREE.Color(0x00ff00);
         this.wireFrameRenderOrder = 1;
         this.verticesPointsRenderOrder = 5;
+        this.sourceTextureMap = null
+        this.targetTextureMap = null
 
         this.createWireFrame();
         this.createVerticesPoints();
@@ -62,6 +67,13 @@ export default class GridMesh3D extends THREE.Mesh
         this.verticesPoints.renderOrder = this.verticesPointsRenderOrder;
 
         this.add(this.verticesPoints);
+    }
+
+    public updateTexture()
+    {
+        console.log("set texture");
+
+        (this.material as THREE.ShaderMaterial).uniforms.map.value = this.targetTextureMap;
     }
 
     public setTriMesh(triMesh: TriMesh)

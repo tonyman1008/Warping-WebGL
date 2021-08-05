@@ -40,16 +40,22 @@ export default class ObjectManager
         this.gridSegments = 20;
     }
 
-    public async createGridMesh(testImgPath, blendColor)
+    public async createGridMesh(sourceImgPath, targetImgPath, blendColor)
     {
         const geo = new THREE.PlaneBufferGeometry(80, 60, this.gridSegments, this.gridSegments);
 
-        const textureMap = await this.textureLoader.loadAsync(testImgPath);
-        textureMap.wrapS = THREE.RepeatWrapping;
-        textureMap.wrapT = THREE.RepeatWrapping;
+        const sourceTextureMap = await this.textureLoader.loadAsync(sourceImgPath);
+        sourceTextureMap.wrapS = THREE.RepeatWrapping;
+        sourceTextureMap.wrapT = THREE.RepeatWrapping;
+        console.log(sourceTextureMap)
+
+        const targetTextureMap = await this.textureLoader.loadAsync(targetImgPath);
+        targetTextureMap.wrapS = THREE.RepeatWrapping;
+        targetTextureMap.wrapT = THREE.RepeatWrapping;
+        console.log(targetTextureMap);
 
         const uniforms = {
-            map: { value: textureMap },
+            map: { value: sourceTextureMap },
             uvOffset: { value: new THREE.Vector2(0, 0) },
             blendColor: { value: blendColor }
         };
@@ -63,6 +69,9 @@ export default class ObjectManager
         })
 
         const gridMesh = new GridMesh3D(geo, mat);
+        gridMesh.sourceTextureMap = sourceTextureMap.clone();
+        gridMesh.targetTextureMap = targetTextureMap.clone();
+        gridMesh.targetTextureMap.needsUpdate = true;
         this.scene.add(gridMesh);
         this.gridMeshAry.push(gridMesh);
 
@@ -70,6 +79,14 @@ export default class ObjectManager
         gridMesh.setTriMesh(triMeshData);
 
         return gridMesh
+    }
+
+    public updateMeshTextureMapByIndex(index)
+    {
+        if (this.gridMeshAry[0] !== undefined)
+        {
+            this.gridMeshAry[0].updateTexture()
+        }
     }
 
     private async parseTriMesh(mesh: THREE.Object3D)
