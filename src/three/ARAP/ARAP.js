@@ -3,6 +3,7 @@ import LinearAlgebra from './linearAlgebra';
 import { cloneVertices, isBorderEdge, createTrianglesFromFaces } from './extras'
 import { Edge } from './edge'
 import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js'; //deprecated
+import { TextureSource } from 'three/object/GridMesh3D';
 
 export default class ARAP
 {
@@ -390,8 +391,8 @@ export default class ARAP
                 const newHandlePos = new THREE.Vector3().lerpVectors( this.handleOriginPosAry[ j ], this.handleTargetPosAry[ j ], interpolationRatio )
                 handlesPos.push( newHandlePos );
             }
-            const newVerticesFrame =  this.LinearAlgebra.manipulation_test( handlesPos, this.edges, this.originalVertices );
-            this.preComputeDeformedVerticesAry.push(newVerticesFrame);
+            const newVerticesFrame = this.LinearAlgebra.manipulation_test( handlesPos, this.edges, this.originalVertices );
+            this.preComputeDeformedVerticesAry.push( newVerticesFrame );
         }
         console.timeEnd( 'preComputeWarpFrame' )
     }
@@ -402,11 +403,21 @@ export default class ARAP
             return;
 
         const index = Math.round( this.warpFrameIndex );
+
+        if ( index > 10 / 2 )
+        {
+            this.model.updateTexture(TextureSource.TargetView)
+        }
+        else
+        {
+            this.model.updateTexture(TextureSource.SourceView)
+        }
+
         for ( let i = 0; i < this.preComputeDeformedVerticesAry[ index ].length; i++ )
         {
             this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ index ][ i ].x, this.preComputeDeformedVerticesAry[ index ][ i ].y );
-            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ index ][ i ].x
-            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ index ][ i ].y
+            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ index ][ i ].x;
+            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ index ][ i ].y;
         }
         this.model.geometry.attributes.position.needsUpdate = true;
     }

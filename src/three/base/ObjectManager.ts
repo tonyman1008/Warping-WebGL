@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import GridMesh3D from 'three/object/GridMesh3D';
+import GridMesh3D, { TextureSource } from 'three/object/GridMesh3D';
 import OpenMesh from "OpenMesh";
 import FragmentShader from "three/shader/FragmentShader";
 import VertexShader from "three/shader/VertexShader";
@@ -47,12 +47,10 @@ export default class ObjectManager
         const sourceTextureMap = await this.textureLoader.loadAsync(sourceImgPath);
         sourceTextureMap.wrapS = THREE.RepeatWrapping;
         sourceTextureMap.wrapT = THREE.RepeatWrapping;
-        console.log(sourceTextureMap)
 
         const targetTextureMap = await this.textureLoader.loadAsync(targetImgPath);
         targetTextureMap.wrapS = THREE.RepeatWrapping;
         targetTextureMap.wrapT = THREE.RepeatWrapping;
-        console.log(targetTextureMap);
 
         const uniforms = {
             map: { value: sourceTextureMap },
@@ -71,7 +69,8 @@ export default class ObjectManager
         const gridMesh = new GridMesh3D(geo, mat);
         gridMesh.sourceTextureMap = sourceTextureMap.clone();
         gridMesh.targetTextureMap = targetTextureMap.clone();
-        gridMesh.targetTextureMap.needsUpdate = true;
+        gridMesh.sourceTextureMap.needsUpdate = true; //need call update function
+        gridMesh.targetTextureMap.needsUpdate = true; //need call update function
         this.scene.add(gridMesh);
         this.gridMeshAry.push(gridMesh);
 
@@ -85,7 +84,15 @@ export default class ObjectManager
     {
         if (this.gridMeshAry[0] !== undefined)
         {
-            this.gridMeshAry[0].updateTexture()
+            if (this.gridMeshAry[0].textureType == TextureSource.SourceView)
+            {
+
+                this.gridMeshAry[0].updateTexture(TextureSource.TargetView)
+            }
+            else
+            {
+                this.gridMeshAry[0].updateTexture(TextureSource.SourceView)
+            }
         }
     }
 
