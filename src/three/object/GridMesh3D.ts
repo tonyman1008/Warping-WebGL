@@ -93,7 +93,6 @@ export default class GridMesh3D extends THREE.Mesh
 
     public setTriMesh(triMesh: TriMesh)
     {
-        console.log(triMesh)
         this.triMesh = triMesh;
     }
 

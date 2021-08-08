@@ -5,10 +5,9 @@ import OpenMesh from "OpenMesh";
 import MeshEditor from './MeshEditor';
 import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
+import ARAP from './ARAP/ARAP';
 import testImgPath from 'assets/balenciagaBag_crop/img01.png';
 import testImgPath2 from 'assets/balenciagaBag_crop/img71.png';
-import ARAP from './ARAP/ARAP';
-// import matchPointsData from 'assets/MatchPointsData/balenciagabag/fourCorner.json';
 import matchPointsData from 'assets/MatchPointsData/balenciagabag/01-71/3/MatchPoints.json';
 
 export default class Viewer
@@ -80,7 +79,7 @@ export default class Viewer
         {
             this.ARAP.warpMatchPoints();
         })
-        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 9, 1).onChange(() =>
+        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, this.ARAP.framesAmount - 1, 1).onChange(() =>
         {
             this.ARAP.warpFrame();
         })

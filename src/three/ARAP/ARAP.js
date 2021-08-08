@@ -16,7 +16,6 @@ export default class ARAP
         this.model = null;
         this.handles = [];
         this.edges = [];
-        this.frames = [];
         this.faces = [];
         this.selectedHandle = null;
         this.originalVertices = null;
@@ -45,6 +44,7 @@ export default class ARAP
         this.handlesPos = [];
         this.warpRatio = 0;
         this.warpFrameIndex = 0;
+        this.framesAmount = 5;
         this.preComputeDeformedVerticesAry = [];
     }
 
@@ -344,6 +344,7 @@ export default class ARAP
     testMatchPointsBarycentry()
     {
         this.barycentricCoordMode = true;
+
         for ( let i = 0; i < this.matchPointsArray.length; i++ )
         {
             //worldpos
@@ -376,19 +377,33 @@ export default class ARAP
         if ( this.handles.length == 0 )
             return;
 
-        const frameAmount = 10;
+        //clear
+        if ( this.preComputeDeformedVerticesAry.length !== 0 )
+        {
+            this.preComputeDeformedVerticesAry = [];
+        }
+
         // interpolation between frame 0 & fame N
         const startFrameVertices = cloneVertices( this.originalVertices )
         this.preComputeDeformedVerticesAry.push( startFrameVertices )
 
         console.time( 'preComputeWarpFrame' )
-        for ( let i = 1; i < frameAmount; i++ )
+        for ( let i = 1; i < this.framesAmount; i++ )
         {
             const handlesPos = [];
-            const interpolationRatio = i / frameAmount;
+            const interpolationRatio = i / this.framesAmount;
+
             for ( let j = 0; j < this.handles.length; j++ )
             {
-                const newHandlePos = new THREE.Vector3().lerpVectors( this.handleOriginPosAry[ j ], this.handleTargetPosAry[ j ], interpolationRatio )
+                const newHandlePos = new THREE.Vector3()
+                if ( i > this.framesAmount / 2 )
+                {
+                    newHandlePos.lerpVectors( this.handleTargetPosAry[ j ], this.handleOriginPosAry[ j ], interpolationRatio )
+                }
+                else
+                {
+                    newHandlePos.lerpVectors( this.handleOriginPosAry[ j ], this.handleTargetPosAry[ j ], interpolationRatio )
+                }
                 handlesPos.push( newHandlePos );
             }
             const newVerticesFrame = this.LinearAlgebra.manipulation_test( handlesPos, this.edges, this.originalVertices );
@@ -404,13 +419,13 @@ export default class ARAP
 
         const index = Math.round( this.warpFrameIndex );
 
-        if ( index > 10 / 2 )
+        if ( index > this.framesAmount / 2 )
         {
-            this.model.updateTexture(TextureSource.TargetView)
+            this.model.updateTexture( TextureSource.TargetView )
         }
         else
         {
-            this.model.updateTexture(TextureSource.SourceView)
+            this.model.updateTexture( TextureSource.SourceView )
         }
 
         for ( let i = 0; i < this.preComputeDeformedVerticesAry[ index ].length; i++ )
@@ -592,7 +607,6 @@ export default class ARAP
         this.model = mesh;
         // ***this geometry structure is deprecated after v125 threejs test
         const positionAttribute = this.model.geometry.getAttribute( 'position' );
-        console.log( positionAttribute );
         // ###deprecated
         this.testGeometry.fromBufferGeometry( mesh.geometry );
         console.log( this.testGeometry );
@@ -749,30 +763,6 @@ export default class ARAP
         this.handlesVisible = true;
         this.eraseAllHandle();
     }
-
-    //TODO: store frame of deformation vertices
-    // updateFrameListeners() {
-    //   $('.framesContainer > img').click(function (event) {
-    //     for (let i = 0; i < frames[$(this).index()].vertices.length; i++) {
-    //         this.model.geometry.vertices[i].x = frames[$(this).index()].vertices[i].x;
-    //       this.model.geometry.vertices[i].y = frames[$(this).index()].vertices[i].y;
-    //       this.deformedVertices = cloneVertices(model.geometry.vertices);
-    //     }
-    //     this.model.geometry.verticesNeedUpdate = true;
-
-    //     for (let i = 0; i < this.handles.length; i++) {
-    //       this.eraseHandle(handles[i]);
-    //     }
-    //     this.handles = [];
-
-    //     for (let i = 0; i < frames[$(this).index()].handles.length; i++) {
-    //         this.handles.push(frames[$(this).index()].handles[i]);
-    //         this.drawHandle(frames[$(this).index()].handles[i]);
-    //     }
-
-    //     keyFrameMode = true;
-    //   });
-    // }
 
     //TODO: windows resize?
 
