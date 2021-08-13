@@ -8,10 +8,11 @@ import { TextureSource } from 'three/object/GridMesh3D';
 export default class ARAP
 {
 
-    constructor( iCamera, iScene, ICanvas )
+    constructor( iCamera, IObjManager, iScene, ICanvas )
     {
-        this.camera = iCamera
-        this.scene = iScene
+        this.camera = iCamera;
+        this.objectMgr = IObjManager;
+        this.scene = iScene;
         this.canvas = ICanvas;
         this.model = null;
         this.handles = [];
@@ -38,13 +39,14 @@ export default class ARAP
 
         // match points test
         this.matchPointsArray = [];
+        this.matchPointsSeqArray = [];
         this.linerInterpolationVertexsPosArray = [];
         this.handleOriginPosAry = [];
         this.handleTargetPosAry = [];
         this.handlesPos = [];
         this.warpRatio = 0;
         this.warpFrameIndex = 0;
-        this.framesAmount = 5;
+        this.framesAmount = 10;
         this.preComputeDeformedVerticesAry = [];
     }
 
@@ -344,44 +346,45 @@ export default class ARAP
     testMatchPointsBarycentry()
     {
         this.barycentricCoordMode = true;
-
-        for ( let i = 0; i < this.matchPointsArray.length; i++ )
+        for ( let i = 0; i < this.matchPointsSeqArray.length; i++ )
         {
-            //worldpos
-            const srcPos = this.matchPointsArray[ i ].src;
-            let newHandle = null;
-            const nearestHandleIndex = this.getNearestHandleIndexOnWorldPos( srcPos );
-
-            if ( !this.handleExistsBaryCentricMode( nearestHandleIndex ) )
+            const matchPoints = this.matchPointsSeqArray[ i ];
+            for ( let j = 0; j < matchPoints.length; j++ )
             {
-                if ( nearestHandleIndex == null )
+                //worldpos
+                const srcPos = matchPoints[ j ].src;
+                let newHandle = null;
+                const nearestHandleIndex = this.getNearestHandleIndexOnWorldPos( srcPos );
+
+                if ( !this.handleExistsBaryCentricMode( nearestHandleIndex ) )
                 {
-                    newHandle = this.createHandleAtPosition( srcPos, this.model.geometry.faces, this.deformedVertices );
-                    this.handles.push( newHandle );
-                    this.handleOriginPosAry.push( newHandle.position.clone() );
-                    this.handleTargetPosAry.push( this.matchPointsArray[ i ].tgt );
-                    this.drawHandle( newHandle );
+                    if ( nearestHandleIndex == null )
+                    {
+                        newHandle = this.createHandleAtPosition( srcPos, this.model.geometry.faces, this.deformedVertices );
+                        this.handles.push( newHandle );
+                        this.handleOriginPosAry.push( newHandle.position.clone() );
+                        this.handleTargetPosAry.push( matchPoints[ j ].tgt );
+                        // this.drawHandle( newHandle );
+                    }
                 }
             }
+            this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
+                async () =>
+                {
+                    console.log( `Compilation frame ${i} finished! ` );
+                    await this.preComputeWarpFrame();
+                    this.handleTargetPosAry = [];
+                    this.handleOriginPosAry = []
+                    this.eraseAllHandle();
+                } );
         }
-
-        this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
-            () =>
-            {
-                console.log( 'Compilation finished! Can drag model!' );
-            } );
+        console.log( "all preCompute complete length", this.preComputeDeformedVerticesAry.length )
     }
 
     preComputeWarpFrame()
     {
         if ( this.handles.length == 0 )
             return;
-
-        //clear
-        if ( this.preComputeDeformedVerticesAry.length !== 0 )
-        {
-            this.preComputeDeformedVerticesAry = [];
-        }
 
         // interpolation between frame 0 & fame N
         const startFrameVertices = cloneVertices( this.originalVertices )
@@ -409,32 +412,51 @@ export default class ARAP
             const newVerticesFrame = this.LinearAlgebra.manipulation_test( handlesPos, this.edges, this.originalVertices );
             this.preComputeDeformedVerticesAry.push( newVerticesFrame );
         }
+        console.log( "preComputeFrame length", this.preComputeDeformedVerticesAry.length )
         console.timeEnd( 'preComputeWarpFrame' )
     }
 
     warpFrame()
     {
-        if ( this.preComputeDeformedVerticesAry.length == 0 )
-            return;
+        // if ( this.preComputeDeformedVerticesAry.length == 0 )
+        //     return;
 
-        const index = Math.round( this.warpFrameIndex );
+        const frameIndex = Math.round( this.warpFrameIndex );
+        this.objectMgr.updateTextureByFrameIndex( frameIndex )
+        // if ( index > this.framesAmount / )
+        // {
+        //     this.model.updateTexture( TextureSource.TargetView )
+        // }
+        // else
+        // {
+        //     this.model.updateTexture( TextureSource.SourceView )
+        // }
 
-        if ( index > this.framesAmount / 2 )
+        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
         {
-            this.model.updateTexture( TextureSource.TargetView )
-        }
-        else
-        {
-            this.model.updateTexture( TextureSource.SourceView )
-        }
-
-        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ index ].length; i++ )
-        {
-            this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ index ][ i ].x, this.preComputeDeformedVerticesAry[ index ][ i ].y );
-            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ index ][ i ].x;
-            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ index ][ i ].y;
+            this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
+            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
+            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
         }
         this.model.geometry.attributes.position.needsUpdate = true;
+    }
+
+    playPreWarpFrameAnimation()
+    {
+        this.warpFrameIndex = 0;
+        const rotataAnimation = setInterval( () =>
+        {
+            this.warpFrameIndex++;
+            if ( this.warpFrameIndex < 360 )
+            {
+                this.warpFrame()
+            } 
+            else
+            {
+                clearInterval(rotataAnimation)
+            }
+        }, 500 );
+
     }
 
     warpMatchPoints()

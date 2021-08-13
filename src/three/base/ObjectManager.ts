@@ -5,7 +5,8 @@ import FragmentShader from "three/shader/FragmentShader";
 import VertexShader from "three/shader/VertexShader";
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 import CustomTriMesh from '../../CustomTriMesh';
-
+const testImageSeqPath = 'Images/red_bag/';
+const imageSeqAmount = 72;
 export default class ObjectManager
 {
 
@@ -42,7 +43,7 @@ export default class ObjectManager
 
     public async createGridMesh(sourceImgPath, targetImgPath, blendColor)
     {
-        const geo = new THREE.PlaneBufferGeometry(80, 60, this.gridSegments, this.gridSegments);
+        const geo = new THREE.PlaneBufferGeometry(64, 48, this.gridSegments, this.gridSegments);
 
         const sourceTextureMap = await this.textureLoader.loadAsync(sourceImgPath);
         sourceTextureMap.wrapS = THREE.RepeatWrapping;
@@ -80,7 +81,26 @@ export default class ObjectManager
         return gridMesh
     }
 
-    public updateMeshTextureMapByIndex(index)
+
+    public async updateTextureByFrameIndex(index)
+    {
+        let sourceViewIndex = Math.round(index / 10);
+        sourceViewIndex *= 2; //skip middle view
+        if (sourceViewIndex >= imageSeqAmount)
+            sourceViewIndex = 0;
+        if (this.gridMeshAry[0] !== undefined)
+        {
+            if (sourceViewIndex >= imageSeqAmount)
+                return;
+            const imgPath = `${testImageSeqPath}frame${sourceViewIndex}.png`;
+            const sourceTextureMap = await this.textureLoader.loadAsync(imgPath);
+            sourceTextureMap.wrapS = THREE.RepeatWrapping;
+            sourceTextureMap.wrapT = THREE.RepeatWrapping;
+            this.gridMeshAry[0].updateTextureByThreeTexture(sourceTextureMap)
+        }
+    }
+
+    public switchTextureMap()
     {
         if (this.gridMeshAry[0] !== undefined)
         {

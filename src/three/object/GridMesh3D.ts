@@ -90,6 +90,19 @@ export default class GridMesh3D extends THREE.Mesh
             this.textureType = type;
         }
     }
+    public updateTextureByThreeTexture(texture: THREE.Texture)
+    {
+        if (this.sourceTextureMap)
+        {
+            //dipose old texture
+            this.sourceTextureMap.dispose();
+            this.sourceTextureMap.copy(texture);
+            texture.dispose();
+        }
+
+        (this.material as THREE.ShaderMaterial).uniforms.map.value = this.sourceTextureMap;
+
+    }
 
     public setTriMesh(triMesh: TriMesh)
     {
