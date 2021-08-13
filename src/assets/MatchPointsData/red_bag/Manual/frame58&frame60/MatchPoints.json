@@ -1,0 +1,104 @@
+{
+    "matchPoints": [
+        {
+            "keyPointOne": [
+                303.0,
+                66.0
+            ],
+            "keyPointTwo": [
+                307.5,
+                66.0
+            ]
+        },
+        {
+            "keyPointOne": [
+                253.5,
+                178.5
+            ],
+            "keyPointTwo": [
+                235.5,
+                178.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                235.5,
+                345.0
+            ],
+            "keyPointTwo": [
+                226.5,
+                349.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                307.5,
+                417.0
+            ],
+            "keyPointTwo": [
+                334.5,
+                417.0
+            ]
+        },
+        {
+            "keyPointOne": [
+                433.5,
+                385.5
+            ],
+            "keyPointTwo": [
+                438.0,
+                376.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                384.0,
+                228.0
+            ],
+            "keyPointTwo": [
+                402.0,
+                228.0
+            ]
+        },
+        {
+            "keyPointOne": [
+                366.0,
+                183.0
+            ],
+            "keyPointTwo": [
+                375.0,
+                178.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                325.5,
+                214.5
+            ],
+            "keyPointTwo": [
+                339.0,
+                214.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                276.0,
+                196.5
+            ],
+            "keyPointTwo": [
+                267.0,
+                192.0
+            ]
+        },
+        {
+            "keyPointOne": [
+                303.0,
+                160.5
+            ],
+            "keyPointTwo": [
+                298.5,
+                160.5
+            ]
+        }
+    ]
+}

@@ -1,0 +1,84 @@
+{
+    "matchPoints": [
+        {
+            "keyPointOne": [
+                316.5,
+                60.0
+            ],
+            "keyPointTwo": [
+                316.5,
+                60.0
+            ]
+        },
+        {
+            "keyPointOne": [
+                235.5,
+                226.5
+            ],
+            "keyPointTwo": [
+                258.0,
+                226.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                213.0,
+                384.0
+            ],
+            "keyPointTwo": [
+                222.0,
+                388.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                325.5,
+                415.5
+            ],
+            "keyPointTwo": [
+                348.0,
+                415.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                262.5,
+                402.0
+            ],
+            "keyPointTwo": [
+                285.0,
+                402.0
+            ]
+        },
+        {
+            "keyPointOne": [
+                424.5,
+                348.0
+            ],
+            "keyPointTwo": [
+                415.5,
+                343.5
+            ]
+        },
+        {
+            "keyPointOne": [
+                402.0,
+                177.0
+            ],
+            "keyPointTwo": [
+                384.0,
+                177.0
+            ]
+        },
+        {
+            "keyPointOne": [
+                339.0,
+                154.5
+            ],
+            "keyPointTwo": [
+                325.5,
+                159.0
+            ]
+        }
+    ]
+}
