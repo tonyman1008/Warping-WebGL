@@ -7,9 +7,10 @@ import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
 import ARAP from './ARAP/ARAP';
 import testImgPath from 'assets/Image/red_bag/frame0.png';
-import testImgPath2 from 'assets/Image/cake/frame3.png';
+import testImgPath2 from 'assets/Image/red_bag/frame0.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
 import MatchPointsSeqData from 'assets/MatchPointsData/red_bag/Manual/MatchPointsSeqData.json';
+
 export default class Viewer
 {
     scene: THREE.Scene;
@@ -37,7 +38,7 @@ export default class Viewer
         //initial set manager
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
-        this.viewportControls.camera.position.set(0, 0, 100)
+        this.viewportControls.camera.position.set(0, 0, 150)
         this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();
@@ -50,7 +51,6 @@ export default class Viewer
         this.testWarpDegree = 0;
         this.testCreateMesh();
         this.setGUI()
-        this.loadMatchPoints();
     }
 
     setGUI()
@@ -82,6 +82,8 @@ export default class Viewer
             this.ARAP.warpFrame();
         })
         ARAPFolder.add(this.ARAP, 'playPreWarpFrameAnimation');
+        ARAPFolder.add(this.ARAP, 'playViewHoppingAnimation');
+        ARAPFolder.add(this.ARAP, 'animationFPS', 1, 60, 1);
 
         const basicFunctionFolder = this.datGUI.addFolder('Basic Function');
         basicFunctionFolder.open();
@@ -101,6 +103,7 @@ export default class Viewer
         //initial TEST
         const blendColor = new THREE.Vector4(1, 1, 1, 1);
         this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2, blendColor);
+        this.viewportControls.setCameraPosToFitObject(this.testMesh);
 
         // const blendColor2 = new THREE.Vector4(0, 255, 0, 0.5);
         // this.leftTargetMesh = await this.objectMgr.createGridMesh(testImgPath2, testImgPath, blendColor2);
@@ -118,6 +121,8 @@ export default class Viewer
         this.meshEditor.load(this.testMesh, this.testMesh.verticesPoints, this.testMesh.triMesh);
         this.scene.add(this.meshEditor.selectedFacesMeshes);
 
+        this.loadMatchPoints();
+
         //ARAP test
         this.ARAP.initializeFromMesh(this.testMesh);
     }
@@ -125,6 +130,7 @@ export default class Viewer
     //TODO: rewrite format
     loadMatchPoints()
     {
+        const { textureWidth, textureHeight, geoScaleDownRate } = this.objectMgr;
         console.log("matchPointsSeq length", MatchPointsSeqData.length);
         for (let j = 0; j < MatchPointsSeqData.length; j++)
         {
@@ -132,21 +138,52 @@ export default class Viewer
             const MatchPointsArray = [];
             for (let i = 0; i < jsonArray.length; i++)
             {
+                // image domain anchor is leftTop (right, down are positive)
+                // texture domain anchor is middle (right, top are positive)
+                // need to parse match points data(image domain);
+
                 //source
-                const srcX = (jsonArray[i].keyPointOne[0] - 640 / 2) / 10;
-                const srcY = (480 / 2 - jsonArray[i].keyPointOne[1]) / 10;
+                const srcX = (jsonArray[i].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
+                const srcY = (textureHeight / 2 - jsonArray[i].keyPointOne[1]) / geoScaleDownRate;
                 const srcZ = 0;
                 const srcMatchPos = new THREE.Vector3(srcX, srcY, srcZ)
 
                 //target
-                const tgtX = (jsonArray[i].keyPointTwo[0] - 640 / 2) / 10;
-                const tgtY = (480 / 2 - jsonArray[i].keyPointTwo[1]) / 10;
+                const tgtX = (jsonArray[i].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
+                const tgtY = (textureHeight / 2 - jsonArray[i].keyPointTwo[1]) / geoScaleDownRate;
                 const tgtZ = 0;
                 const tgtMatchPos = new THREE.Vector3(tgtX, tgtY, tgtZ)
 
                 const matchPosPair = { src: srcMatchPos, tgt: tgtMatchPos };
                 MatchPointsArray.push(matchPosPair);
             }
+
+            //add four corners to be handles
+            const leftTop = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2, textureHeight / geoScaleDownRate / 2, 0);
+            const leftDown = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2, -textureHeight / geoScaleDownRate / 2, 0);
+            const rightTop = new THREE.Vector3(textureWidth / geoScaleDownRate / 2, textureHeight / geoScaleDownRate / 2, 0);
+            const rightDown = new THREE.Vector3(textureWidth / geoScaleDownRate / 2, -textureHeight / geoScaleDownRate / 2, 0);
+            const corners = [leftTop, leftDown, rightTop, rightDown];
+            for (let j = 0; j < 4; j++)
+            {
+                //set four corner to tgt and src match points;
+                const matchPosPair = { src: corners[j], tgt: corners[j] };
+                MatchPointsArray.push(matchPosPair);
+            }
+
+            const leftTopCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            const leftDownCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            const rightTopCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            const rightDownCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            const cornersCenter = [leftTopCenter, leftDownCenter, rightTopCenter, rightDownCenter];
+            // add center constrain points
+            for (let j = 0; j < 4; j++)
+            {
+                //set four corner to tgt and src match points;
+                const matchPosPair = { src: cornersCenter[j], tgt: cornersCenter[j] };
+                MatchPointsArray.push(matchPosPair);
+            }
+
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)
             // console.log("match points length", this.ARAP.matchPointsArray.length);
         }

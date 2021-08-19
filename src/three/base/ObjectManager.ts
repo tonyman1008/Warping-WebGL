@@ -18,7 +18,6 @@ export default class ObjectManager
     gridMeshAry: GridMesh3D[] = [];
 
     textureLoader: THREE.TextureLoader;
-
     objExporter: OBJExporter;
     openMeshController: OpenMesh;
 
@@ -26,6 +25,9 @@ export default class ObjectManager
     allVerticesVisible: boolean = true;
 
     gridSegments: number;
+    textureWidth: number;
+    textureHeight: number;
+    geoScaleDownRate: number;
 
     constructor(iScene: THREE.Scene, iOpenMesh: OpenMesh)
     {
@@ -39,15 +41,19 @@ export default class ObjectManager
         this.objExporter = new OBJExporter();
         this.textureLoader = new THREE.TextureLoader();
         this.gridSegments = 20;
+        this.textureWidth = 0;
+        this.textureHeight = 0;
+        this.geoScaleDownRate = 10;
     }
 
     public async createGridMesh(sourceImgPath, targetImgPath, blendColor)
     {
-        const geo = new THREE.PlaneBufferGeometry(64, 48, this.gridSegments, this.gridSegments);
-
         const sourceTextureMap = await this.textureLoader.loadAsync(sourceImgPath);
         sourceTextureMap.wrapS = THREE.RepeatWrapping;
         sourceTextureMap.wrapT = THREE.RepeatWrapping;
+        this.textureWidth = sourceTextureMap.image.width;
+        this.textureHeight = sourceTextureMap.image.height;
+        console.log("texture size", this.textureWidth, this.textureHeight);
 
         const targetTextureMap = await this.textureLoader.loadAsync(targetImgPath);
         targetTextureMap.wrapS = THREE.RepeatWrapping;
@@ -67,6 +73,10 @@ export default class ObjectManager
             uniforms: uniforms
         })
 
+        const geoWidth = this.textureWidth / this.geoScaleDownRate;
+        const geoHeight = this.textureHeight / this.geoScaleDownRate;
+        const geo = new THREE.PlaneBufferGeometry(geoWidth, geoHeight, this.gridSegments, this.gridSegments);
+
         const gridMesh = new GridMesh3D(geo, mat);
         gridMesh.sourceTextureMap = sourceTextureMap.clone();
         gridMesh.targetTextureMap = targetTextureMap.clone();
@@ -84,7 +94,7 @@ export default class ObjectManager
 
     public async updateTextureByFrameIndex(index)
     {
-        let sourceViewIndex = Math.round(index / 10);
+        let sourceViewIndex = Math.round(index);
         sourceViewIndex *= 2; //skip middle view
         if (sourceViewIndex >= imageSeqAmount)
             sourceViewIndex = 0;

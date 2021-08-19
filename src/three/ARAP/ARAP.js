@@ -48,6 +48,7 @@ export default class ARAP
         this.warpFrameIndex = 0;
         this.framesAmount = 10;
         this.preComputeDeformedVerticesAry = [];
+        this.animationFPS = 30;
     }
 
     getNearestHandleIndex( x, y, vertices )
@@ -354,6 +355,7 @@ export default class ARAP
                 //worldpos
                 const srcPos = matchPoints[ j ].src;
                 let newHandle = null;
+                console.log(srcPos);
                 const nearestHandleIndex = this.getNearestHandleIndexOnWorldPos( srcPos );
 
                 if ( !this.handleExistsBaryCentricMode( nearestHandleIndex ) )
@@ -375,7 +377,7 @@ export default class ARAP
                     await this.preComputeWarpFrame();
                     this.handleTargetPosAry = [];
                     this.handleOriginPosAry = []
-                    this.eraseAllHandle();
+                    // this.eraseAllHandle();
                 } );
         }
         console.log( "all preCompute complete length", this.preComputeDeformedVerticesAry.length )
@@ -420,10 +422,10 @@ export default class ARAP
     {
         // if ( this.preComputeDeformedVerticesAry.length == 0 )
         //     return;
-
         const frameIndex = Math.round( this.warpFrameIndex );
+        console.log( frameIndex )
         this.objectMgr.updateTextureByFrameIndex( frameIndex )
-        // if ( index > this.framesAmount / )
+        // if ( index > this.framesAmount /2 )
         // {
         //     this.model.updateTexture( TextureSource.TargetView )
         // }
@@ -432,13 +434,13 @@ export default class ARAP
         //     this.model.updateTexture( TextureSource.SourceView )
         // }
 
-        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
-        {
-            this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
-            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
-            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
-        }
-        this.model.geometry.attributes.position.needsUpdate = true;
+        // for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
+        // {
+        //     this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
+        //     this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
+        //     this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
+        // }
+        // this.model.geometry.attributes.position.needsUpdate = true;
     }
 
     playPreWarpFrameAnimation()
@@ -446,17 +448,34 @@ export default class ARAP
         this.warpFrameIndex = 0;
         const rotataAnimation = setInterval( () =>
         {
-            this.warpFrameIndex++;
+            this.warpFrameIndex += 1;
             if ( this.warpFrameIndex < 360 )
             {
                 this.warpFrame()
-            } 
+            }
             else
             {
-                clearInterval(rotataAnimation)
+                clearInterval( rotataAnimation )
             }
-        }, 500 );
+        }, 1000 / this.animationFPS );
+    }
 
+    playViewHoppingAnimation()
+    {
+        this.warpFrameIndex = 0;
+        const rotataAnimation = setInterval( () =>
+        {
+            this.warpFrameIndex += 1;
+            if ( this.warpFrameIndex < 360 )
+            {
+                const frameIndex = Math.round( this.warpFrameIndex );
+                this.objectMgr.updateTextureByFrameIndex( frameIndex )
+            }
+            else
+            {
+                clearInterval( rotataAnimation )
+            }
+        }, 1000 / this.animationFPS );
     }
 
     warpMatchPoints()
