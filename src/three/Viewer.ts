@@ -171,17 +171,33 @@ export default class Viewer
                 MatchPointsArray.push(matchPosPair);
             }
 
-            const leftTopCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            const leftDownCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            const rightTopCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            const rightDownCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            const cornersCenter = [leftTopCenter, leftDownCenter, rightTopCenter, rightDownCenter];
-            // add center constrain points
-            for (let j = 0; j < 4; j++)
+            // const leftTopCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            // const leftDownCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            // const rightTopCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            // const rightDownCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
+            // const cornersCenter = [leftTopCenter, leftDownCenter, rightTopCenter, rightDownCenter];
+            // // add center constrain points
+            // for (let j = 0; j < 4; j++)
+            // {
+            //     //set four corner to tgt and src match points;
+            //     const matchPosPair = { src: cornersCenter[j], tgt: cornersCenter[j] };
+            //     MatchPointsArray.push(matchPosPair);
+            // }
+
+            for (let i = 1; i < 3; i++)
             {
-                //set four corner to tgt and src match points;
-                const matchPosPair = { src: cornersCenter[j], tgt: cornersCenter[j] };
-                MatchPointsArray.push(matchPosPair);
+                const leftTopCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+                const leftDownCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+                const rightTopCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+                const rightDownCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+                const cornersCenter_test = [leftTopCenter_test, leftDownCenter_test, rightTopCenter_test, rightDownCenter_test];
+
+                for (let j = 0; j < 4; j++)
+                {
+                    //set four corner to tgt and src match points;
+                    const matchPosPair = { src: cornersCenter_test[j], tgt: cornersCenter_test[j] };
+                    MatchPointsArray.push(matchPosPair);
+                }
             }
 
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)

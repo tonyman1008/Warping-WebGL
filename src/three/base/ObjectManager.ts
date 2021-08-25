@@ -94,7 +94,8 @@ export default class ObjectManager
 
     public async updateTextureByFrameIndex(index)
     {
-        let sourceViewIndex = Math.round(index);
+        let sourceViewIndex = Math.round(index / 10);
+        console.log(sourceViewIndex)
         sourceViewIndex *= 2; //skip middle view
         if (sourceViewIndex >= imageSeqAmount)
             sourceViewIndex = 0;

@@ -377,7 +377,7 @@ export default class ARAP
                     await this.preComputeWarpFrame();
                     this.handleTargetPosAry = [];
                     this.handleOriginPosAry = []
-                    // this.eraseAllHandle();
+                    this.eraseAllHandle();
                 } );
         }
         console.log( "all preCompute complete length", this.preComputeDeformedVerticesAry.length )
@@ -401,13 +401,13 @@ export default class ARAP
             for ( let j = 0; j < this.handles.length; j++ )
             {
                 const newHandlePos = new THREE.Vector3()
-                if ( i > this.framesAmount / 2 )
+                if ( i < this.framesAmount / 2 )
                 {
-                    newHandlePos.lerpVectors( this.handleTargetPosAry[ j ], this.handleOriginPosAry[ j ], interpolationRatio )
+                    newHandlePos.lerpVectors( this.handleOriginPosAry[ j ], this.handleTargetPosAry[ j ], interpolationRatio )
                 }
                 else
                 {
-                    newHandlePos.lerpVectors( this.handleOriginPosAry[ j ], this.handleTargetPosAry[ j ], interpolationRatio )
+                    newHandlePos.lerpVectors( this.handleTargetPosAry[ j ], this.handleOriginPosAry[ j ], interpolationRatio )
                 }
                 handlesPos.push( newHandlePos );
             }
@@ -423,7 +423,6 @@ export default class ARAP
         // if ( this.preComputeDeformedVerticesAry.length == 0 )
         //     return;
         const frameIndex = Math.round( this.warpFrameIndex );
-        console.log( frameIndex )
         this.objectMgr.updateTextureByFrameIndex( frameIndex )
         // if ( index > this.framesAmount /2 )
         // {
@@ -434,13 +433,13 @@ export default class ARAP
         //     this.model.updateTexture( TextureSource.SourceView )
         // }
 
-        // for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
-        // {
-        //     this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
-        //     this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
-        //     this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
-        // }
-        // this.model.geometry.attributes.position.needsUpdate = true;
+        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
+        {
+            this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
+            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
+            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
+        }
+        this.model.geometry.attributes.position.needsUpdate = true;
     }
 
     playPreWarpFrameAnimation()
