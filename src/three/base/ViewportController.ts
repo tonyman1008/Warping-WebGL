@@ -1,8 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-let self: ViewportController;
-
 export default class ViewportController
 {
     camera: THREE.PerspectiveCamera;
@@ -29,7 +27,7 @@ export default class ViewportController
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1;
-        window.addEventListener("resize", this.windowResized, false);
+        window.addEventListener("resize", this.windowResized.bind(this), false);
         // Initialize camera
         this.camera = new THREE.PerspectiveCamera(
             50,
@@ -41,20 +39,18 @@ export default class ViewportController
         this.controls.target.set(0, 0, 0);
         this.controls.domElement = this.renderer.domElement;
         this.controls.update();
-        //
-        self = this;
     }
 
     windowResized()
     {
-        if (self.camera != null)
+        if (this.camera != null)
         {
-            self.camera.aspect = self.canvas.clientWidth / self.canvas.clientHeight;
-            self.camera.updateProjectionMatrix();
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
         }
-        self.renderer.setSize(
-            self.canvas.clientWidth,
-            self.canvas.clientHeight,
+        this.renderer.setSize(
+            window.innerWidth,
+            window.innerHeight,
             false
         );
     };
