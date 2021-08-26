@@ -5,8 +5,8 @@ import FragmentShader from "three/shader/FragmentShader";
 import VertexShader from "three/shader/VertexShader";
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 import CustomTriMesh from '../../CustomTriMesh';
-const testImageSeqPath = 'Images/red_bag/';
-const imageSeqAmount = 72;
+const testImageSeqPath = 'Images/car_1000x1000/';
+const imageSeqAmount = 360;
 export default class ObjectManager
 {
 
@@ -95,15 +95,15 @@ export default class ObjectManager
     public async updateTextureByFrameIndex(index)
     {
         let sourceViewIndex = Math.round(index / 10);
-        console.log(sourceViewIndex)
-        sourceViewIndex *= 2; //skip middle view
+        sourceViewIndex *= 10; // frames diff
+        console.log("update texture image index", sourceViewIndex)
         if (sourceViewIndex >= imageSeqAmount)
             sourceViewIndex = 0;
         if (this.gridMeshAry[0] !== undefined)
         {
             if (sourceViewIndex >= imageSeqAmount)
                 return;
-            const imgPath = `${testImageSeqPath}frame${sourceViewIndex}.png`;
+            const imgPath = `${testImageSeqPath}${sourceViewIndex}.png`;
             const sourceTextureMap = await this.textureLoader.loadAsync(imgPath);
             sourceTextureMap.wrapS = THREE.RepeatWrapping;
             sourceTextureMap.wrapT = THREE.RepeatWrapping;

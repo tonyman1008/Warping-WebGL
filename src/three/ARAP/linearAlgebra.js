@@ -44,7 +44,7 @@ export default class LinearAlgebra
   {
     if ( handles.length == 0 )
       return;
-
+      
     this.C1 = this.buildC1( handles, vertices, barycentricMode );
     this.C2 = this.buildC2( handles, vertices, barycentricMode );
     this.A1 = math.concat( this.L1, this.C1, 0 );

@@ -6,10 +6,10 @@ import MeshEditor from './MeshEditor';
 import * as dat from "dat-gui";
 import GridMesh3D from './object/GridMesh3D';
 import ARAP from './ARAP/ARAP';
-import testImgPath from 'assets/Image/red_bag/frame0.png';
-import testImgPath2 from 'assets/Image/red_bag/frame0.png';
+import testImgPath from 'assets/Image/car_1000x1000/0.png';
+import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
-import MatchPointsSeqData from 'assets/MatchPointsData/red_bag/Manual/MatchPointsSeqData.json';
+import MatchPointsSeqData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_36view_10degDiff.json';
 
 export default class Viewer
 {
@@ -77,9 +77,9 @@ export default class Viewer
         {
             this.ARAP.warpMatchPoints();
         })
-        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 360 - 1, 1).listen().onChange(() =>
+        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 10 - 1, 1).listen().onChange(() =>
         {
-            this.ARAP.warpFrame();
+            this.ARAP.warpBetweenTwoSourceImage();
         })
         ARAPFolder.add(this.ARAP, 'playPreWarpFrameAnimation');
         ARAPFolder.add(this.ARAP, 'playViewHoppingAnimation');
@@ -184,21 +184,21 @@ export default class Viewer
             //     MatchPointsArray.push(matchPosPair);
             // }
 
-            for (let i = 1; i < 3; i++)
-            {
-                const leftTopCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-                const leftDownCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-                const rightTopCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-                const rightDownCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-                const cornersCenter_test = [leftTopCenter_test, leftDownCenter_test, rightTopCenter_test, rightDownCenter_test];
+            // for (let i = 1; i < 3; i++)
+            // {
+            //     const leftTopCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+            //     const leftDownCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+            //     const rightTopCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+            //     const rightDownCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
+            //     const cornersCenter_test = [leftTopCenter_test, leftDownCenter_test, rightTopCenter_test, rightDownCenter_test];
 
-                for (let j = 0; j < 4; j++)
-                {
-                    //set four corner to tgt and src match points;
-                    const matchPosPair = { src: cornersCenter_test[j], tgt: cornersCenter_test[j] };
-                    MatchPointsArray.push(matchPosPair);
-                }
-            }
+            //     for (let j = 0; j < 4; j++)
+            //     {
+            //         //set four corner to tgt and src match points;
+            //         const matchPosPair = { src: cornersCenter_test[j], tgt: cornersCenter_test[j] };
+            //         MatchPointsArray.push(matchPosPair);
+            //     }
+            // }
 
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)
             // console.log("match points length", this.ARAP.matchPointsArray.length);
