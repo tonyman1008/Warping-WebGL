@@ -10,6 +10,15 @@ import testImgPath from 'assets/Image/car_1000x1000/0.png';
 import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
 import MatchPointsSeqData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_36view_10degDiff.json';
+import { getGeometry } from './delaunator';
+
+declare global
+{
+    interface Window
+    {
+        three: any;
+    }
+}
 
 export default class Viewer
 {
@@ -32,6 +41,7 @@ export default class Viewer
 
     constructor()
     {
+        window.three = this;
         this.scene = new THREE.Scene()
         this.container = document.getElementById('three-canvas') as HTMLCanvasElement;
 
@@ -49,7 +59,7 @@ export default class Viewer
         this.ARAP = new ARAP(this.viewportControls.camera, this.objectMgr, this.scene, this.container);
 
         this.testWarpDegree = 0;
-        this.testCreateMesh();
+        this.testDelaunyRemesh();
         this.setGUI()
     }
 
@@ -124,7 +134,42 @@ export default class Viewer
         this.loadMatchPoints();
 
         //ARAP test
-        this.ARAP.initializeFromMesh(this.testMesh);
+        // this.ARAP.initializeFromMesh(this.testMesh);
+    }
+
+    async testDelaunyRemesh()
+    {
+        //initial TEST
+        const blendColor = new THREE.Vector4(1, 1, 1, 1);
+        this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2, blendColor);
+        this.viewportControls.setCameraPosToFitObject(this.testMesh);
+
+        const { textureWidth, textureHeight, geoScaleDownRate } = this.objectMgr;
+
+        // store initial position buffer attribute
+        let originGeo = this.testMesh.geometry as THREE.PlaneBufferGeometry;
+        const positionAttribute = originGeo.getAttribute('position');
+        let PositionAttributeAry = positionAttribute.clone().array;
+
+        const jsonArray = MatchPointsSeqData[0].matchPoints
+        let remeshPoint = Array.from(PositionAttributeAry);
+        console.log(remeshPoint);
+        for (let i = 0; i < jsonArray.length; i++)
+        {
+            // image domain anchor is leftTop (right, down are positive)
+            // texture domain anchor is middle (right, top are positive)
+            // need to parse match points data(image domain);
+
+            //source
+            const srcX = (jsonArray[i].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
+            const srcY = (textureHeight / 2 - jsonArray[i].keyPointOne[1]) / geoScaleDownRate;
+            const srcZ = 0;
+            let singlePoint = [srcX, srcY, srcZ];
+            remeshPoint = remeshPoint.concat(singlePoint);
+        }
+
+        let delaunyGeo = getGeometry(remeshPoint, textureWidth, textureHeight);
+        this.testMesh.updateGeometry(delaunyGeo);
     }
 
     //TODO: rewrite format

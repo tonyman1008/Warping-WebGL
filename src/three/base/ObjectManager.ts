@@ -43,7 +43,7 @@ export default class ObjectManager
         this.gridSegments = 20;
         this.textureWidth = 0;
         this.textureHeight = 0;
-        this.geoScaleDownRate = 10;
+        this.geoScaleDownRate = 1;
     }
 
     public async createGridMesh(sourceImgPath, targetImgPath, blendColor)

@@ -29,7 +29,7 @@ export default class ARAP
 
         this.raycaster = new THREE.Raycaster();
         this.LinearAlgebra = new LinearAlgebra();
-        this.attachEvent( this.canvas );
+        // this.attachEvent( this.canvas );
         console.log( "ARAP init" )
 
         // ***this geometry structure is deprecated after v125 threejs test

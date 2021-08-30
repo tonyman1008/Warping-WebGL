@@ -27,7 +27,7 @@ export default class GridMesh3D extends THREE.Mesh
 
         this.verticesMat = new THREE.PointsMaterial({
             side: THREE.DoubleSide,
-            size: 0.01,
+            size: 15,
             transparent: false,
             vertexColors: true,
         })
@@ -102,6 +102,27 @@ export default class GridMesh3D extends THREE.Mesh
 
         (this.material as THREE.ShaderMaterial).uniforms.map.value = this.sourceTextureMap;
 
+    }
+
+    public updateGeometry(newGeo: THREE.BufferGeometry)
+    {
+        if (this.geometry)
+        {
+            this.geometry.dispose();
+            this.geometry = newGeo;
+        }
+
+        if (this.wireframe?.geometry)
+        {
+            this.wireframe.geometry.dispose()
+            this.wireframe.geometry = newGeo;
+        }
+
+        if (this.verticesPoints?.geometry)
+        {
+            this.verticesPoints.geometry.dispose()
+            this.verticesPoints.geometry = newGeo;
+        }
     }
 
     public setTriMesh(triMesh: TriMesh)
