@@ -9,7 +9,7 @@ import ARAP from './ARAP/ARAP';
 import testImgPath from 'assets/Image/car_1000x1000/0.png';
 import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
-import MatchPointsSeqData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_36view_10degDiff.json';
+import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
 import { getGeometry } from './delaunator';
 
 declare global
@@ -59,7 +59,7 @@ export default class Viewer
         this.ARAP = new ARAP(this.viewportControls.camera, this.objectMgr, this.scene, this.container);
 
         this.testWarpDegree = 0;
-        this.testDelaunyRemesh();
+        this.testDelaunayRemesh();
         this.setGUI()
     }
 
@@ -137,7 +137,7 @@ export default class Viewer
         // this.ARAP.initializeFromMesh(this.testMesh);
     }
 
-    async testDelaunyRemesh()
+    async testDelaunayRemesh()
     {
         //initial TEST
         const blendColor = new THREE.Vector4(1, 1, 1, 1);
@@ -151,9 +151,8 @@ export default class Viewer
         const positionAttribute = originGeo.getAttribute('position');
         let PositionAttributeAry = positionAttribute.clone().array;
 
-        const jsonArray = MatchPointsSeqData[0].matchPoints
+        const jsonArray = CorrespondenceData.matchPointSeqData[0].matchPoints
         let remeshPoint = Array.from(PositionAttributeAry);
-        console.log(remeshPoint);
         for (let i = 0; i < jsonArray.length; i++)
         {
             // image domain anchor is leftTop (right, down are positive)
@@ -164,22 +163,46 @@ export default class Viewer
             const srcX = (jsonArray[i].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
             const srcY = (textureHeight / 2 - jsonArray[i].keyPointOne[1]) / geoScaleDownRate;
             const srcZ = 0;
-            let singlePoint = [srcX, srcY, srcZ];
-            remeshPoint = remeshPoint.concat(singlePoint);
+
+            const srcGeo = new THREE.SphereGeometry(2);
+            const srcMat = new THREE.MeshBasicMaterial({ color: 'green' });
+            const srcTestSphere = new THREE.Mesh(srcGeo, srcMat);
+            srcTestSphere.position.set(srcX, srcY, srcZ)
+            this.scene.add(srcTestSphere);
+
+            //target
+            const tgtX = (jsonArray[i].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
+            const tgtY = (textureHeight / 2 - jsonArray[i].keyPointTwo[1]) / geoScaleDownRate;
+            const tgtZ = 0;
+
+            const tgtGeo = new THREE.SphereGeometry(2);
+            const tgtMat = new THREE.MeshBasicMaterial({ color: 'blue' });
+            const tgtTestSphere = new THREE.Mesh(tgtGeo, tgtMat);
+            tgtTestSphere.position.set(tgtX, tgtY, tgtZ)
+            this.scene.add(tgtTestSphere);
+
+            let srcPoint = [srcX, srcY, srcZ];
+            let tgtPoint = [tgtX, tgtY, tgtZ];
+            remeshPoint = remeshPoint.concat(srcPoint, tgtPoint);
         }
 
-        let delaunyGeo = getGeometry(remeshPoint, textureWidth, textureHeight);
-        this.testMesh.updateGeometry(delaunyGeo);
+        let delaunayGeo = getGeometry(remeshPoint, textureWidth, textureHeight);
+        this.testMesh.updateGeometry(delaunayGeo);
+
+        this.loadMatchPoints();
+
+        this.ARAP.initializeFromMesh(this.testMesh);
     }
 
     //TODO: rewrite format
     loadMatchPoints()
     {
         const { textureWidth, textureHeight, geoScaleDownRate } = this.objectMgr;
-        console.log("matchPointsSeq length", MatchPointsSeqData.length);
-        for (let j = 0; j < MatchPointsSeqData.length; j++)
+        const matchPointsSeqData = CorrespondenceData.matchPointSeqData;
+        console.log("matchPointsSeq length", matchPointsSeqData.length);
+        for (let j = 0; j < matchPointsSeqData.length; j++)
         {
-            const jsonArray = MatchPointsSeqData[j].matchPoints
+            const jsonArray = matchPointsSeqData[j].matchPoints
             const MatchPointsArray = [];
             for (let i = 0; i < jsonArray.length; i++)
             {
@@ -244,7 +267,6 @@ export default class Viewer
             //         MatchPointsArray.push(matchPosPair);
             //     }
             // }
-
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)
             // console.log("match points length", this.ARAP.matchPointsArray.length);
         }
