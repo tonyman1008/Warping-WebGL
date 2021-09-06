@@ -94,8 +94,9 @@ export default class ObjectManager
 
     public async updateTextureByFrameIndex(index)
     {
-        let sourceViewIndex = Math.round(index / 10);
-        sourceViewIndex *= 10; // frames diff
+        // rounding
+        let sourceViewIndex = index
+
         console.log("update texture image index", sourceViewIndex)
         if (sourceViewIndex >= imageSeqAmount)
             sourceViewIndex = 0;

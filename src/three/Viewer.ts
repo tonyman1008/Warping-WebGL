@@ -39,6 +39,9 @@ export default class Viewer
     defaultPositionAttribute: THREE.BufferAttribute;
     ARAP: ARAP;
 
+    soruceTestPoints: THREE.Mesh[];
+    targetTestPoints: THREE.Mesh[];
+
     constructor()
     {
         window.three = this;
@@ -59,6 +62,8 @@ export default class Viewer
         this.ARAP = new ARAP(this.viewportControls.camera, this.objectMgr, this.scene, this.container);
 
         this.testWarpDegree = 0;
+        this.soruceTestPoints = [];
+        this.targetTestPoints = [];
         this.testDelaunayRemesh();
         this.setGUI()
     }
@@ -87,7 +92,7 @@ export default class Viewer
         {
             this.ARAP.warpMatchPoints();
         })
-        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 10 - 1, 1).listen().onChange(() =>
+        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 5, 1).listen().onChange(() =>
         {
             this.ARAP.warpBetweenTwoSourceImage();
         })
@@ -99,8 +104,8 @@ export default class Viewer
         basicFunctionFolder.open();
         basicFunctionFolder.add(this.objectMgr, 'setAllMeshWireFrameVisible').name('wireFrameVisible')
         basicFunctionFolder.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
-        basicFunctionFolder.add(this, 'setTargetMeshVisible').name('TargetMeshVisible')
-        basicFunctionFolder.add(this.objectMgr, 'switchTextureMap')
+        basicFunctionFolder.add(this, 'setAllTargetPointVisible')
+        basicFunctionFolder.add(this, 'setAllSourcePointVisible')
     }
 
     setTargetMeshVisible()
@@ -169,6 +174,7 @@ export default class Viewer
             const srcTestSphere = new THREE.Mesh(srcGeo, srcMat);
             srcTestSphere.position.set(srcX, srcY, srcZ)
             this.scene.add(srcTestSphere);
+            this.soruceTestPoints.push(srcTestSphere);
 
             //target
             const tgtX = (jsonArray[i].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
@@ -180,6 +186,7 @@ export default class Viewer
             const tgtTestSphere = new THREE.Mesh(tgtGeo, tgtMat);
             tgtTestSphere.position.set(tgtX, tgtY, tgtZ)
             this.scene.add(tgtTestSphere);
+            this.targetTestPoints.push(tgtTestSphere);
 
             let srcPoint = [srcX, srcY, srcZ];
             let tgtPoint = [tgtX, tgtY, tgtZ];
@@ -239,37 +246,25 @@ export default class Viewer
                 MatchPointsArray.push(matchPosPair);
             }
 
-            // const leftTopCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            // const leftDownCenter = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            // const rightTopCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            // const rightDownCenter = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * 0.2, -textureHeight / geoScaleDownRate / 2 * 0.2, 0);
-            // const cornersCenter = [leftTopCenter, leftDownCenter, rightTopCenter, rightDownCenter];
-            // // add center constrain points
-            // for (let j = 0; j < 4; j++)
-            // {
-            //     //set four corner to tgt and src match points;
-            //     const matchPosPair = { src: cornersCenter[j], tgt: cornersCenter[j] };
-            //     MatchPointsArray.push(matchPosPair);
-            // }
-
-            // for (let i = 1; i < 3; i++)
-            // {
-            //     const leftTopCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-            //     const leftDownCenter_test = new THREE.Vector3(-textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-            //     const rightTopCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-            //     const rightDownCenter_test = new THREE.Vector3(textureWidth / geoScaleDownRate / 2 * (i / 10), -textureHeight / geoScaleDownRate / 2 * (i / 10), 0);
-            //     const cornersCenter_test = [leftTopCenter_test, leftDownCenter_test, rightTopCenter_test, rightDownCenter_test];
-
-            //     for (let j = 0; j < 4; j++)
-            //     {
-            //         //set four corner to tgt and src match points;
-            //         const matchPosPair = { src: cornersCenter_test[j], tgt: cornersCenter_test[j] };
-            //         MatchPointsArray.push(matchPosPair);
-            //     }
-            // }
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)
             // console.log("match points length", this.ARAP.matchPointsArray.length);
         }
+    }
+
+    setAllSourcePointVisible()
+    {
+        this.soruceTestPoints.forEach((point) =>
+        {
+            point.visible = !point.visible
+        });
+    }
+
+    setAllTargetPointVisible()
+    {
+        this.targetTestPoints.forEach((point) =>
+        {
+            point.visible = !point.visible
+        });
     }
 
     warp()

@@ -44,6 +44,7 @@ export default class ARAP
         this.warpRatio = 0;
         this.warpFrameIndex = 0;
         this.framesAmount = 10;
+        this.degDiffBetweenTwoSourceImg = 5;
         this.preComputeDeformedVerticesAry = [];
         this.preComputeHandlePosAry = [];
         this.animationFPS = 30;
@@ -315,7 +316,7 @@ export default class ARAP
     testMatchPoints()
     {
         console.log( "testMatchPoints start" );
-        const perImageInterpolationFrames = 10;
+        const degDiffBetweenTwoSourceImg = 5;
         for ( let i = 0; i < 1; i++ )
         {
             // this.filterMatchPointsArray();
@@ -329,7 +330,6 @@ export default class ARAP
                 const { x, y } = matchPoints[ j ].src;
 
                 const nearestVertexIndex = this.getNearestVertexIndexOnWorldPos( x, y, this.deformedVertices );
-                console.log(nearestVertexIndex);
                 let newHandle = null;
 
                 if ( !this.handleExists( nearestVertexIndex ) )
@@ -350,17 +350,18 @@ export default class ARAP
                 }
             }
 
+            console.log("handle ary length",handlesAry.length)
+            // this.preComputeHardConstraintVerticesMove(srcHandlesPosAry, tgtHandlesPosAry);
             this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
                 async () =>
                 {
                     console.log( `Compilation frame ${i} finished! ` );
-                    await this.preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry, perImageInterpolationFrames, false );
+                    await this.preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry, false );
                     // this.handleTargetPosAry = [];
                     // this.handleOriginPosAry = [];
                     // this.eraseAllHandle();
                 } );
         }
-
     }
 
     testMatchPointsBarycentry()
@@ -419,7 +420,36 @@ export default class ARAP
         console.log( "all preCompute complete length", this.preComputeDeformedVerticesAry.length )
     }
 
-    preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry, perImageInterpolationFrames, warpBack )
+    preComputeHardConstraintVerticesMove(srcHandlesPosAry,tgtHandlesPosAry)
+    {
+        console.time( 'preComputeWarpFrame' )
+
+        for(let i=0;i<this.degDiffBetweenTwoSourceImg+1;i++)
+        {
+            const deformVertice = cloneVertices(this.originalVertices);
+            const newHandlesPosAry = [];
+            const interpolationRatio = i / this.degDiffBetweenTwoSourceImg;
+            console.log("interratio",interpolationRatio);
+
+            for(let j=0;j<srcHandlesPosAry.length;j++)
+            {
+                const newHandlePos = new THREE.Vector3();
+                newHandlePos.lerpVectors( srcHandlesPosAry[ j ], tgtHandlesPosAry[ j ], interpolationRatio )
+                newHandlesPosAry.push( newHandlePos );
+                
+                const {x,y} = srcHandlesPosAry[j];
+                const nearestVertexIndex = this.getNearestVertexIndexOnWorldPos( x, y, this.originalVertices );
+                deformVertice[nearestVertexIndex].x = newHandlePos.x;
+                deformVertice[nearestVertexIndex].y = newHandlePos.y;
+            }
+            this.preComputeDeformedVerticesAry.push(deformVertice);
+            this.preComputeHandlePosAry.push( newHandlesPosAry );
+        }
+        console.log( "preComputeFrame length", this.preComputeDeformedVerticesAry.length )
+        console.timeEnd( 'preComputeWarpFrame' )
+    }
+
+    preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry, warpBack )
     {
         // if ( this.handles.length == 0 )
         //     return;
@@ -431,14 +461,14 @@ export default class ARAP
 
         console.time( 'preComputeWarpFrame' )
 
-        for ( let i = 0; i < perImageInterpolationFrames; i++ )
+        for ( let i = 0; i < this.degDiffBetweenTwoSourceImg+1; i++ )
         {
             const newHandlesPosAry = [];
-            const interpolationRatio = i / perImageInterpolationFrames;
-
+            const interpolationRatio = i / this.degDiffBetweenTwoSourceImg;
+            console.log("interratio",interpolationRatio);
             for ( let j = 0; j < srcHandlesPosAry.length; j++ )
             {
-                const newHandlePos = new THREE.Vector3()
+                const newHandlePos = new THREE.Vector3();
                 // if ( warpBack == false )
                 // {
                     newHandlePos.lerpVectors( srcHandlesPosAry[ j ], tgtHandlesPosAry[ j ], interpolationRatio )
@@ -449,7 +479,9 @@ export default class ARAP
                 // }
                 newHandlesPosAry.push( newHandlePos );
             }
+
             const newVerticesFrame = this.LinearAlgebra.manipulation_test( newHandlesPosAry, this.edges, this.originalVertices );
+
             this.preComputeDeformedVerticesAry.push( newVerticesFrame );
             this.preComputeHandlePosAry.push( newHandlesPosAry );
         }
@@ -464,8 +496,11 @@ export default class ARAP
 
         const frameIndex = Math.round( this.warpFrameIndex );
         console.log( "frameIndex", frameIndex );
-        console.log( "pre vertices length ", this.preComputeDeformedVerticesAry.length );
-        this.objectMgr.updateTextureByFrameIndex( frameIndex )
+        
+        const perImageInterpolationFrames = (this.degDiffBetweenTwoSourceImg +1 )/2;
+        const textureIndex = parseInt(frameIndex /perImageInterpolationFrames) * this.degDiffBetweenTwoSourceImg;
+        console.log( "textureIndex", textureIndex );
+        this.objectMgr.updateTextureByFrameIndex( textureIndex )
 
         for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
         {
@@ -475,12 +510,10 @@ export default class ARAP
         }
 
         // handle position
-        console.log( "handle length", this.handles.length );
         for ( let j = 0; j < this.preComputeHandlePosAry[ frameIndex ].length; j++ )
         {
-            // this.handles[ j ].position.copy( this.preComputeHandlePosAry[ frameIndex ][ j ] );
+            this.handles[ j ].position.copy( this.preComputeHandlePosAry[ frameIndex ][ j ] );
         }
-
         this.model.geometry.attributes.position.needsUpdate = true;
     }
 
@@ -490,8 +523,6 @@ export default class ARAP
             return;
 
         const frameIndex = Math.round( this.warpFrameIndex );
-        console.log( "frameIndex", frameIndex );
-        console.log( "pre vertices length ", this.preComputeDeformedVerticesAry.length );
         this.objectMgr.updateTextureByFrameIndex( frameIndex )
 
         for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
@@ -756,13 +787,11 @@ export default class ARAP
     createHandleAtVertex( index, vertices )
     {
         const vertex = vertices[ index ];
-        const uniformScale = this.camera.position.z / 300;
-        const geometry = new THREE.SphereGeometry( 1, 32, 32 );
+        const geometry = new THREE.SphereGeometry( 3, 32, 32 );
         const material = new THREE.MeshBasicMaterial( { color: this.handleColor } );
         const newHandle = new THREE.Mesh( geometry, material );
 
         newHandle.position.set( vertex.x, vertex.y, vertex.z );
-        newHandle.scale.set( uniformScale, uniformScale, uniformScale );
         newHandle.v_index = index;
 
         return newHandle;
@@ -777,7 +806,6 @@ export default class ARAP
     {
         const triangles = createTrianglesFromFaces( this.testGeometry.faces, vertices );
         let newHandle = null;
-        const uniformScale = this.camera.position.z / 300;
         for ( let i = 0; i < triangles.length; i++ )
         {
             if ( triangles[ i ].containsPoint( worldPos ) )
@@ -807,11 +835,10 @@ export default class ARAP
 
                 let p = x1y1.add( x2y2 ).add( x3y3 );
 
-                let geometry = new THREE.SphereGeometry( 1, 32, 32 );
+                let geometry = new THREE.SphereGeometry( 3, 32, 32 );
                 let material = new THREE.MeshBasicMaterial( { color: this.handleColor } );
                 newHandle = new THREE.Mesh( geometry, material );
                 newHandle.position.set( p.x, p.y, p.z );
-                newHandle.scale.set( uniformScale, uniformScale, uniformScale );
                 newHandle.l1 = l1;
                 newHandle.l2 = l2;
                 newHandle.l3 = l3;
