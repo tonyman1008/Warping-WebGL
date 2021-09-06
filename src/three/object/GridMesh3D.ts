@@ -21,7 +21,7 @@ export default class GridMesh3D extends THREE.Mesh
     public wireframe: THREE.Mesh;
     public triMesh: TriMesh;
 
-    constructor(geo, mat)
+    constructor(geo: THREE.BufferGeometry, mat: THREE.Material)
     {
         super(geo, mat);
 

@@ -192,7 +192,6 @@ export default class Viewer
             let tgtPoint = [tgtX, tgtY, tgtZ];
             remeshPoint = remeshPoint.concat(srcPoint, tgtPoint);
         }
-
         let delaunayGeo = getGeometry(remeshPoint, textureWidth, textureHeight);
         this.testMesh.updateGeometry(delaunayGeo);
 

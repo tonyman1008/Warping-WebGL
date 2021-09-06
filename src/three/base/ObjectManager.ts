@@ -46,7 +46,7 @@ export default class ObjectManager
         this.geoScaleDownRate = 1;
     }
 
-    public async createGridMesh(sourceImgPath, targetImgPath, blendColor)
+    public async createGridMesh(sourceImgPath: string, targetImgPath: string, blendColor: THREE.Vector4)
     {
         const sourceTextureMap = await this.textureLoader.loadAsync(sourceImgPath);
         sourceTextureMap.wrapS = THREE.RepeatWrapping;
@@ -92,7 +92,7 @@ export default class ObjectManager
     }
 
 
-    public async updateTextureByFrameIndex(index)
+    public async updateTextureByFrameIndex(index: number)
     {
         // rounding
         let sourceViewIndex = index
