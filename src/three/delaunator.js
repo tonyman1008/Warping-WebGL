@@ -11,20 +11,20 @@ function coords2d3d( coords )
     return coords3d;
 }
 
-function getGeometry( faceLandMarksPoints, width, height )
+function getGeometry( keyPoints, width, height )
 {
     const points3d = [];
-    points3d.push( new THREE.Vector3( -width / 2, height / 2, 0 ) );
-    points3d.push( new THREE.Vector3( width / 2, height / 2, 0 ) );
-    points3d.push( new THREE.Vector3( width / 2, -height / 2, 0 ) );
-    points3d.push( new THREE.Vector3( -width / 2, -height / 2, 0 ) );
+    // points3d.push( new THREE.Vector3( -width / 2, height / 2, 0 ) );
+    // points3d.push( new THREE.Vector3( width / 2, height / 2, 0 ) );
+    // points3d.push( new THREE.Vector3( width / 2, -height / 2, 0 ) );
+    // points3d.push( new THREE.Vector3( -width / 2, -height / 2, 0 ) );
 
-    for ( let i = 0; i < faceLandMarksPoints.length; i += 3 )
+    for ( let i = 0; i < keyPoints.length; i += 3 )
     {
         points3d.push(
             new THREE.Vector3(
-                faceLandMarksPoints[ i ],
-                faceLandMarksPoints[ i + 1 ],
+                keyPoints[ i ],
+                keyPoints[ i + 1 ],
                 0
             )
         );
