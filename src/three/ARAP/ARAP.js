@@ -569,28 +569,6 @@ export default class ARAP
         }, 1000 / this.animationFPS );
     }
 
-    warpMatchPoints()
-    {
-        if ( this.handles.length == 0 )
-            return;
-
-        const handlesPos = [];
-        for ( let i = 0; i < this.handles.length; i++ )
-        {
-            const newHandlePos = new THREE.Vector3().lerpVectors( this.handleOriginPosAry[ i ], this.handleTargetPosAry[ i ], this.warpRatio )
-            handlesPos.push( newHandlePos );
-            this.handles[ i ].position.copy( newHandlePos );
-        }
-        let newVertices = this.LinearAlgebra.manipulation_test( handlesPos, this.edges, this.originalVertices );
-        for ( let i = 0; i < newVertices.length; i++ )
-        {
-            this.model.geometry.attributes.position.setXY( i, newVertices[ i ].x, newVertices[ i ].y );
-            this.testGeometry.vertices[ i ].x = newVertices[ i ].x
-            this.testGeometry.vertices[ i ].y = newVertices[ i ].y
-        }
-        this.model.geometry.attributes.position.needsUpdate = true;
-    }
-
     mouseRightClick( event )
     {
         if ( this.keyFrameMode )

@@ -75,17 +75,10 @@ export default class Viewer
         const ARAPFolder = this.datGUI.addFolder('ARAP');
         ARAPFolder.open();
         ARAPFolder.add(this.ARAP, 'enableARAP');
-        ARAPFolder.add(this.ARAP, 'barycentricCoordMode').name('barycentricMode').onChange(() => this.ARAP.onModeChange()).listen();
-        ARAPFolder.add(this.ARAP, 'setAllHandlesVisible').name('handlesVisible');
         ARAPFolder.add(this.ARAP, 'resetARAP');
         ARAPFolder.add(this.ARAP, 'testMatchPoints').name('matchVertices');
         ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry').name('matchBarycentry')
-        ARAPFolder.add(this.ARAP, 'preComputeWarpFrame').name('computeFrame');
-        ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 100, 1).name('weight');
-        ARAPFolder.add(this.ARAP, 'warpRatio', 0, 1, 0.1).onChange(() =>
-        {
-            this.ARAP.warpMatchPoints();
-        })
+        ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 10000, 1).name('weight');
         ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 5, 1).listen().onChange(() =>
         {
             this.ARAP.warpBetweenTwoSourceImage();
@@ -100,6 +93,7 @@ export default class Viewer
         basicFunctionFolder.add(this.objectMgr, 'setAllMeshVerticesPointsVisible').name('verticesVisible')
         basicFunctionFolder.add(this, 'setAllTargetPointVisible')
         basicFunctionFolder.add(this, 'setAllSourcePointVisible')
+        basicFunctionFolder.add(this.ARAP, 'setAllHandlesVisible').name('handlesVisible');
     }
 
     setTargetMeshVisible()
