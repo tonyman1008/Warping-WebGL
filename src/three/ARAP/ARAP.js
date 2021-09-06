@@ -41,7 +41,6 @@ export default class ARAP
         this.handleOriginPosAry = [];
         this.handleTargetPosAry = [];
         this.handlesPos = [];
-        this.warpRatio = 0;
         this.warpFrameIndex = 0;
         this.framesAmount = 10;
         this.degDiffBetweenTwoSourceImg = 5;
@@ -869,8 +868,6 @@ export default class ARAP
         this.handlesVisible = true;
         this.eraseAllHandle();
     }
-
-    //TODO: windows resize?
 
     attachEvent( canvas )
     {

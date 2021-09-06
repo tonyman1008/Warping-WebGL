@@ -144,7 +144,7 @@ export default class Viewer
         const positionAttribute = originGeo.getAttribute('position');
         let PositionAttributeAry = positionAttribute.clone().array;
 
-        const jsonArray = CorrespondenceData.matchPointSeqData[0].matchPoints
+        const jsonArray = CorrespondenceData.matchPointSeqData[0].matchPoints;
         let remeshPoint = Array.from(PositionAttributeAry);
         for (let i = 0; i < jsonArray.length; i++)
         {
@@ -194,25 +194,25 @@ export default class Viewer
         const { textureWidth, textureHeight, geoScaleDownRate } = this.objectMgr;
         const matchPointsSeqData = CorrespondenceData.matchPointSeqData;
         console.log("matchPointsSeq length", matchPointsSeqData.length);
-        for (let j = 0; j < matchPointsSeqData.length; j++)
+        for (let i = 0; i < matchPointsSeqData.length; i++)
         {
-            const jsonArray = matchPointsSeqData[j].matchPoints
+            const jsonArray = matchPointsSeqData[i].matchPoints
             const MatchPointsArray = [];
-            for (let i = 0; i < jsonArray.length; i++)
+            for (let j = 0; j < jsonArray.length; j++)
             {
                 // image domain anchor is leftTop (right, down are positive)
                 // texture domain anchor is middle (right, top are positive)
                 // need to parse match points data(image domain);
 
                 //source
-                const srcX = (jsonArray[i].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
-                const srcY = (textureHeight / 2 - jsonArray[i].keyPointOne[1]) / geoScaleDownRate;
+                const srcX = (jsonArray[j].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
+                const srcY = (textureHeight / 2 - jsonArray[j].keyPointOne[1]) / geoScaleDownRate;
                 const srcZ = 0;
                 const srcMatchPos = new THREE.Vector3(srcX, srcY, srcZ)
 
                 //target
-                const tgtX = (jsonArray[i].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
-                const tgtY = (textureHeight / 2 - jsonArray[i].keyPointTwo[1]) / geoScaleDownRate;
+                const tgtX = (jsonArray[j].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
+                const tgtY = (textureHeight / 2 - jsonArray[j].keyPointTwo[1]) / geoScaleDownRate;
                 const tgtZ = 0;
                 const tgtMatchPos = new THREE.Vector3(tgtX, tgtY, tgtZ)
 
@@ -226,12 +226,36 @@ export default class Viewer
             const rightTop = new THREE.Vector3(textureWidth / geoScaleDownRate / 2, textureHeight / geoScaleDownRate / 2, 0);
             const rightDown = new THREE.Vector3(textureWidth / geoScaleDownRate / 2, -textureHeight / geoScaleDownRate / 2, 0);
             const corners = [leftTop, leftDown, rightTop, rightDown];
-            for (let j = 0; j < 4; j++)
+            corners.forEach((corner) =>
+            {
+                corner.multiplyScalar(0.5)
+            })
+            for (let k = 0; k < 4; k++)
             {
                 //set four corner to tgt and src match points;
-                const matchPosPair = { src: corners[j], tgt: corners[j] };
+                const matchPosPair = { src: corners[k], tgt: corners[k] };
                 MatchPointsArray.push(matchPosPair);
             }
+
+            // test
+            for (let k = -4; k < 5; k++)
+            {
+                const testPoints = new THREE.Vector3(textureWidth / 2 * k * 0.1, textureHeight / 2 * 0.5, 0);
+                const testPointsDown = new THREE.Vector3(textureWidth / 2 * k * 0.1, -textureHeight / 2 * 0.5, 0);
+                const matchPosPair = { src: testPoints, tgt: testPoints };
+                const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
+                MatchPointsArray.push(matchPosPair, matchPosPairDown);
+            }
+
+            for (let k = -4; k < 5; k++)
+            {
+                const testPoints = new THREE.Vector3(textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
+                const testPointsDown = new THREE.Vector3(-textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
+                const matchPosPair = { src: testPoints, tgt: testPoints };
+                const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
+                MatchPointsArray.push(matchPosPair, matchPosPairDown);
+            }
+
 
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)
             // console.log("match points length", this.ARAP.matchPointsArray.length);
