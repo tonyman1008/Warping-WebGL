@@ -9,25 +9,33 @@ const testImageSeqPath = 'Images/car_1000x1000/';
 const imageSeqAmount = 360;
 export default class ObjectManager
 {
-
+    // scene
     scene: THREE.Scene
 
+    // default geometry, material
     defaultGeo: THREE.PlaneBufferGeometry
     defaultMat: THREE.MeshBasicMaterial
 
-    gridMeshAry: GridMesh3D[] = [];
+    // test mesh object array
+    gridMeshAry: GridMesh3D[];
 
+    // manager
     textureLoader: THREE.TextureLoader;
     objExporter: OBJExporter;
     openMeshController: OpenMesh;
 
+    // attribute
     allWireFrameVisible: boolean = true;
     allVerticesVisible: boolean = true;
 
+    // object parameter
     gridSegments: number;
     textureWidth: number;
     textureHeight: number;
     geoScaleDownRate: number;
+
+    // delaunay geometry
+    preComputeDelaunayGeo: THREE.BufferGeometry[];
 
     constructor(iScene: THREE.Scene, iOpenMesh: OpenMesh)
     {
@@ -44,6 +52,9 @@ export default class ObjectManager
         this.textureWidth = 0;
         this.textureHeight = 0;
         this.geoScaleDownRate = 1;
+
+        this.gridMeshAry = [];
+        this.preComputeDelaunayGeo = [];
     }
 
     public async createGridMesh(sourceImgPath: string, targetImgPath: string, blendColor: THREE.Vector4)

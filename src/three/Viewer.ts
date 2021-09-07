@@ -9,8 +9,8 @@ import ARAP from './ARAP/ARAP';
 import testImgPath from 'assets/Image/car_1000x1000/0.png';
 import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
-import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
-import { getGeometry } from './delaunator';
+import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_150vertices_72view_5degDiff.json';
+import { getGeometry } from './Delaunator';
 
 declare global
 {
@@ -32,10 +32,8 @@ export default class Viewer
     datGUI: dat;
 
     testMesh: GridMesh3D;
-    leftTargetMesh: GridMesh3D;
-    rightargetMesh: GridMesh3D;
+    rightargetMsh: GridMesh3D;
 
-    testWarpDegree: number;
     defaultPositionAttribute: THREE.BufferAttribute;
     ARAP: ARAP;
 
@@ -70,7 +68,7 @@ export default class Viewer
     setGUI()
     {
         //Basic gui setting
-        this.datGUI.width = '450px'
+        this.datGUI.width = '400px'
 
         const ARAPFolder = this.datGUI.addFolder('ARAP');
         ARAPFolder.open();
@@ -96,24 +94,12 @@ export default class Viewer
         basicFunctionFolder.add(this.ARAP, 'setAllHandlesVisible').name('handlesVisible');
     }
 
-    setTargetMeshVisible()
-    {
-        this.leftTargetMesh.visible = !this.leftTargetMesh.visible;
-    }
-
     async testCreateMesh()
     {
         //initial TEST
         const blendColor = new THREE.Vector4(1, 1, 1, 1);
         this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2, blendColor);
         this.viewportControls.setCameraPosToFitObject(this.testMesh);
-
-        // const blendColor2 = new THREE.Vector4(0, 255, 0, 0.5);
-        // this.leftTargetMesh = await this.objectMgr.createGridMesh(testImgPath2, testImgPath, blendColor2);
-        // this.leftTargetMesh.translateZ(-0.0001)
-        // this.leftTargetMesh.setVerticesPointsVisible(false)
-        // this.leftTargetMesh.setWireFrameVisible(false)
-        // this.leftTargetMesh.visible = false
 
         // store initial position buffer attribute
         const geo = this.testMesh.geometry as THREE.PlaneBufferGeometry;
@@ -144,44 +130,50 @@ export default class Viewer
         const positionAttribute = originGeo.getAttribute('position');
         let PositionAttributeAry = positionAttribute.clone().array;
 
-        const jsonArray = CorrespondenceData.matchPointSeqData[0].matchPoints;
-        let remeshPoint = Array.from(PositionAttributeAry);
-        for (let i = 0; i < jsonArray.length; i++)
+        for (let i = 0; i < CorrespondenceData.matchPointSeqData.length; i++)
         {
-            // image domain anchor is leftTop (right, down are positive)
-            // texture domain anchor is middle (right, top are positive)
-            // need to parse match points data(image domain);
+            const jsonArray = CorrespondenceData.matchPointSeqData[i].matchPoints;
+            let remeshPoint = Array.from(PositionAttributeAry);
 
-            //source
-            const srcX = (jsonArray[i].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
-            const srcY = (textureHeight / 2 - jsonArray[i].keyPointOne[1]) / geoScaleDownRate;
-            const srcZ = 0;
+            for (let j = 0; j < jsonArray.length; j++)
+            {
+                // image domain anchor is leftTop (right, down are positive)
+                // texture domain anchor is middle (right, top are positive)
+                // need to parse match points data(image domain);
 
-            const srcGeo = new THREE.SphereGeometry(2);
-            const srcMat = new THREE.MeshBasicMaterial({ color: 'green' });
-            const srcTestSphere = new THREE.Mesh(srcGeo, srcMat);
-            srcTestSphere.position.set(srcX, srcY, srcZ)
-            this.scene.add(srcTestSphere);
-            this.soruceTestPoints.push(srcTestSphere);
+                //source
+                const srcX = (jsonArray[j].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
+                const srcY = (textureHeight / 2 - jsonArray[j].keyPointOne[1]) / geoScaleDownRate;
+                const srcZ = 0;
 
-            //target
-            const tgtX = (jsonArray[i].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
-            const tgtY = (textureHeight / 2 - jsonArray[i].keyPointTwo[1]) / geoScaleDownRate;
-            const tgtZ = 0;
+                // const srcGeo = new THREE.SphereGeometry(4);
+                // const srcMat = new THREE.MeshBasicMaterial({ color: 'green' });
+                // const srcTestSphere = new THREE.Mesh(srcGeo, srcMat);
+                // srcTestSphere.position.set(srcX, srcY, srcZ)
+                // this.scene.add(srcTestSphere);
+                // this.soruceTestPoints.push(srcTestSphere);
 
-            const tgtGeo = new THREE.SphereGeometry(2);
-            const tgtMat = new THREE.MeshBasicMaterial({ color: 'blue' });
-            const tgtTestSphere = new THREE.Mesh(tgtGeo, tgtMat);
-            tgtTestSphere.position.set(tgtX, tgtY, tgtZ)
-            this.scene.add(tgtTestSphere);
-            this.targetTestPoints.push(tgtTestSphere);
+                //target
+                const tgtX = (jsonArray[j].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
+                const tgtY = (textureHeight / 2 - jsonArray[j].keyPointTwo[1]) / geoScaleDownRate;
+                const tgtZ = 0;
 
-            let srcPoint = [srcX, srcY, srcZ];
-            let tgtPoint = [tgtX, tgtY, tgtZ];
-            remeshPoint = remeshPoint.concat(srcPoint, tgtPoint);
+                // const tgtGeo = new THREE.SphereGeometry(4);
+                // const tgtMat = new THREE.MeshBasicMaterial({ color: 'blue' });
+                // const tgtTestSphere = new THREE.Mesh(tgtGeo, tgtMat);
+                // tgtTestSphere.position.set(tgtX, tgtY, tgtZ)
+                // this.scene.add(tgtTestSphere);
+                // this.targetTestPoints.push(tgtTestSphere);
+
+                let srcPoint = [srcX, srcY, srcZ];
+                let tgtPoint = [tgtX, tgtY, tgtZ];
+                remeshPoint = remeshPoint.concat(srcPoint, tgtPoint);
+            }
+            let delaunayGeo = getGeometry(remeshPoint, textureWidth, textureHeight);
+            this.objectMgr.preComputeDelaunayGeo.push(delaunayGeo);
         }
-        let delaunayGeo = getGeometry(remeshPoint, textureWidth, textureHeight);
-        this.testMesh.updateGeometry(delaunayGeo);
+
+        this.testMesh.updateGeometry(this.objectMgr.preComputeDelaunayGeo[0]);
 
         this.loadMatchPoints();
 
@@ -237,25 +229,24 @@ export default class Viewer
                 MatchPointsArray.push(matchPosPair);
             }
 
-            // test
-            for (let k = -4; k < 5; k++)
-            {
-                const testPoints = new THREE.Vector3(textureWidth / 2 * k * 0.1, textureHeight / 2 * 0.5, 0);
-                const testPointsDown = new THREE.Vector3(textureWidth / 2 * k * 0.1, -textureHeight / 2 * 0.5, 0);
-                const matchPosPair = { src: testPoints, tgt: testPoints };
-                const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
-                MatchPointsArray.push(matchPosPair, matchPosPairDown);
-            }
+            // area constraint
+            // for (let k = -4; k < 5; k++)
+            // {
+            //     const testPoints = new THREE.Vector3(textureWidth / 2 * k * 0.1, textureHeight / 2 * 0.5, 0);
+            //     const testPointsDown = new THREE.Vector3(textureWidth / 2 * k * 0.1, -textureHeight / 2 * 0.5, 0);
+            //     const matchPosPair = { src: testPoints, tgt: testPoints };
+            //     const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
+            //     MatchPointsArray.push(matchPosPair, matchPosPairDown);
+            // }
 
-            for (let k = -4; k < 5; k++)
-            {
-                const testPoints = new THREE.Vector3(textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
-                const testPointsDown = new THREE.Vector3(-textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
-                const matchPosPair = { src: testPoints, tgt: testPoints };
-                const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
-                MatchPointsArray.push(matchPosPair, matchPosPairDown);
-            }
-
+            // for (let k = -4; k < 5; k++)
+            // {
+            //     const testPoints = new THREE.Vector3(textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
+            //     const testPointsDown = new THREE.Vector3(-textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
+            //     const matchPosPair = { src: testPoints, tgt: testPoints };
+            //     const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
+            //     MatchPointsArray.push(matchPosPair, matchPosPairDown);
+            // }
 
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)
             // console.log("match points length", this.ARAP.matchPointsArray.length);

@@ -18,7 +18,7 @@ export default class LinearAlgebra
         this.INVA2TA2 = null;
         this.A1Term = null;
         this.A2Term = null;
-        this.w = 10000;
+        this.w = 1;
         this.deformedVertices = [];
     }
 
