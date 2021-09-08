@@ -18,12 +18,14 @@ export default class LinearAlgebra
         this.INVA2TA2 = null;
         this.A1Term = null;
         this.A2Term = null;
-        this.w = 1;
+        this.w = 10000;
         this.deformedVertices = [];
     }
 
     registration( edges, vertices, deformedVertices )
     {
+        this.resetLinearAlgebra();
+
         // add
         this.deformedVertices = deformedVertices;
         let gk, hk, gkTerm = null;
@@ -445,6 +447,26 @@ export default class LinearAlgebra
         b2 = math.concat( b2EdgeVectors, b2Handles, 0 );
 
         return b2;
+    }
+
+    resetLinearAlgebra()
+    {
+        console.log("reset LinearAlgebra")
+        this.Gks = [];
+        this.GkTerms = [];
+        this.Hks = [];
+        this.L1 = null;
+        this.L2 = null;
+        this.C1 = null;
+        this.C2 = null;
+        this.A1 = null;
+        this.A2 = null;
+        this.INVA1TA1 = null;
+        this.INVA2TA2 = null;
+        this.A1Term = null;
+        this.A2Term = null;
+        this.w = 1;
+        this.deformedVertices = [];
     }
 }
 

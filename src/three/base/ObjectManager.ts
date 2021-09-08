@@ -33,6 +33,7 @@ export default class ObjectManager
     textureWidth: number;
     textureHeight: number;
     geoScaleDownRate: number;
+    sourceTextureIndex: number
 
     // delaunay geometry
     preComputeDelaunayGeo: THREE.BufferGeometry[];
@@ -52,6 +53,7 @@ export default class ObjectManager
         this.textureWidth = 0;
         this.textureHeight = 0;
         this.geoScaleDownRate = 1;
+        this.sourceTextureIndex = 0;
 
         this.gridMeshAry = [];
         this.preComputeDelaunayGeo = [];
@@ -106,16 +108,18 @@ export default class ObjectManager
     public async updateTextureByFrameIndex(index: number)
     {
         // rounding
-        let sourceViewIndex = index
+        if (this.sourceTextureIndex == index) return;
 
-        console.log("update texture image index", sourceViewIndex)
-        if (sourceViewIndex >= imageSeqAmount)
-            sourceViewIndex = 0;
+        this.sourceTextureIndex = index
+
+        console.log("update texture image index", this.sourceTextureIndex)
+        if (this.sourceTextureIndex >= imageSeqAmount)
+            this.sourceTextureIndex = 0;
         if (this.gridMeshAry[0] !== undefined)
         {
-            if (sourceViewIndex >= imageSeqAmount)
+            if (this.sourceTextureIndex >= imageSeqAmount)
                 return;
-            const imgPath = `${testImageSeqPath}${sourceViewIndex}.png`;
+            const imgPath = `${testImageSeqPath}${this.sourceTextureIndex}.png`;
             const sourceTextureMap = await this.textureLoader.loadAsync(imgPath);
             sourceTextureMap.wrapS = THREE.RepeatWrapping;
             sourceTextureMap.wrapT = THREE.RepeatWrapping;

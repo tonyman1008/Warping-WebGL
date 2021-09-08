@@ -3,13 +3,13 @@ import ViewportController from "./base/ViewportController";
 import ObjectManager from './base/ObjectManager';
 import OpenMesh from "OpenMesh";
 import MeshEditor from './MeshEditor';
-import * as dat from "dat-gui";
+import * as dat from "dat.gui";
 import GridMesh3D from './object/GridMesh3D';
 import ARAP from './ARAP/ARAP';
 import testImgPath from 'assets/Image/car_1000x1000/0.png';
 import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
-import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_150vertices_72view_5degDiff.json';
+import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
 import { getGeometry } from './Delaunator';
 
 declare global
@@ -77,9 +77,9 @@ export default class Viewer
         ARAPFolder.add(this.ARAP, 'testMatchPoints').name('matchVertices');
         ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry').name('matchBarycentry')
         ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 10000, 1).name('weight');
-        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 5, 1).listen().onChange(() =>
+        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 9, 1).listen().onChange(() =>
         {
-            this.ARAP.warpBetweenTwoSourceImage();
+            this.ARAP.warpFrame();
         })
         ARAPFolder.add(this.ARAP, 'playPreWarpFrameAnimation');
         ARAPFolder.add(this.ARAP, 'playViewHoppingAnimation');
@@ -130,7 +130,7 @@ export default class Viewer
         const positionAttribute = originGeo.getAttribute('position');
         let PositionAttributeAry = positionAttribute.clone().array;
 
-        for (let i = 0; i < CorrespondenceData.matchPointSeqData.length; i++)
+        for (let i = 0; i < 2; i++)
         {
             const jsonArray = CorrespondenceData.matchPointSeqData[i].matchPoints;
             let remeshPoint = Array.from(PositionAttributeAry);
@@ -170,18 +170,20 @@ export default class Viewer
                 remeshPoint = remeshPoint.concat(srcPoint, tgtPoint);
             }
             let delaunayGeo = getGeometry(remeshPoint, textureWidth, textureHeight);
+            console.log("delaunayGeo", delaunayGeo.attributes.position.count)
             this.objectMgr.preComputeDelaunayGeo.push(delaunayGeo);
         }
 
         this.testMesh.updateGeometry(this.objectMgr.preComputeDelaunayGeo[0]);
 
-        this.loadMatchPoints();
+        await this.loadMatchPoints();
 
-        this.ARAP.initializeFromMesh(this.testMesh);
+        this.ARAP.targetMesh = this.testMesh;
+        // this.ARAP.initializeFromMesh(this.testMesh);
     }
 
     //TODO: rewrite format
-    loadMatchPoints()
+    async loadMatchPoints()
     {
         const { textureWidth, textureHeight, geoScaleDownRate } = this.objectMgr;
         const matchPointsSeqData = CorrespondenceData.matchPointSeqData;
@@ -218,10 +220,7 @@ export default class Viewer
             const rightTop = new THREE.Vector3(textureWidth / geoScaleDownRate / 2, textureHeight / geoScaleDownRate / 2, 0);
             const rightDown = new THREE.Vector3(textureWidth / geoScaleDownRate / 2, -textureHeight / geoScaleDownRate / 2, 0);
             const corners = [leftTop, leftDown, rightTop, rightDown];
-            corners.forEach((corner) =>
-            {
-                corner.multiplyScalar(0.5)
-            })
+
             for (let k = 0; k < 4; k++)
             {
                 //set four corner to tgt and src match points;
@@ -230,7 +229,7 @@ export default class Viewer
             }
 
             // area constraint
-            // for (let k = -4; k < 5; k++)
+            // for (let k = -5; k < 5; k++)
             // {
             //     const testPoints = new THREE.Vector3(textureWidth / 2 * k * 0.1, textureHeight / 2 * 0.5, 0);
             //     const testPointsDown = new THREE.Vector3(textureWidth / 2 * k * 0.1, -textureHeight / 2 * 0.5, 0);
@@ -239,7 +238,7 @@ export default class Viewer
             //     MatchPointsArray.push(matchPosPair, matchPosPairDown);
             // }
 
-            // for (let k = -4; k < 5; k++)
+            // for (let k = -5; k < 5; k++)
             // {
             //     const testPoints = new THREE.Vector3(textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
             //     const testPointsDown = new THREE.Vector3(-textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);

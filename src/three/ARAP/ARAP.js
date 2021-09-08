@@ -14,7 +14,7 @@ export default class ARAP
         this.objectMgr = IObjManager;
         this.scene = iScene;
         this.canvas = ICanvas;
-        this.model = null;
+        this.targetMesh = null;
         this.handles = [];
         this.edges = [];
         this.faces = [];
@@ -96,13 +96,12 @@ export default class ARAP
 
     eraseAllHandle()
     {
-        console.log( "earse handles" )
+        console.log( "erase handles" )
         for ( let i = 0; i < this.handles.length; i++ )
         {
             this.scene.remove( this.handles[ i ] );
         }
         this.handles = [];
-        console.log( "handles length", this.handles.length );
     }
 
     getHandleBaryCentricMode( index )
@@ -204,7 +203,7 @@ export default class ARAP
             else
             {
                 this.clickedOnHandle = false;
-                newHandle = this.createHandleAtPosition( worldPos, this.model.geometry.faces, this.deformedVertices );
+                newHandle = this.createHandleAtPosition( worldPos, this.targetMesh.geometry.faces, this.deformedVertices );
                 this.handles.push( newHandle );
                 console.log( 'Compilation started! Adding marker! Please Wait..' );
                 //TODO: chnage set time out
@@ -213,7 +212,7 @@ export default class ARAP
                     this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
                         () =>
                         {
-                            console.log( 'Compilation finished! Can drag model!' );
+                            console.log( 'Compilation finished! Can drag targetMesh!' );
                             this.drawHandle( newHandle );
                         } );
                 }, 20 );
@@ -243,7 +242,7 @@ export default class ARAP
                         this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
                             () =>
                             {
-                                console.log( 'Compilation finished! Can drag model!' );
+                                console.log( 'Compilation finished! Can drag targetMesh!' );
                                 this.drawHandle( newHandle );
                             } );
                     }, 20 );
@@ -312,13 +311,20 @@ export default class ARAP
     }
 
     //test
-    testMatchPoints()
+    async testMatchPoints()
     {
         console.log( "testMatchPoints start" );
-        const degDiffBetweenTwoSourceImg = 5;
-        for ( let i = 0; i < 1; i++ )
+        for ( let i = 0; i < 2; i++ )
         {
-            // this.filterMatchPointsArray();
+            // clear
+            this.eraseAllHandle();
+            this.handleTargetPosAry = [];
+            this.handleOriginPosAry = [];
+            
+            this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ i ] )
+            // init arap mesh
+            await this.initializeFromMesh( this.objectMgr.preComputeDelaunayGeo[ i ] );
+
             const matchPoints = this.matchPointsSeqArray[ i ].slice();
             const handlesAry = [];
             let srcHandlesPosAry = [];
@@ -336,11 +342,11 @@ export default class ARAP
                     if ( nearestVertexIndex != null )
                     {
                         newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
-                        this.handles.push( newHandle );
+                        // this.handles.push( newHandle );
                         srcHandlesPosAry.push( matchPoints[ j ].src );
                         tgtHandlesPosAry.push( matchPoints[ j ].tgt );
                         handlesAry.push( newHandle );
-                        this.drawHandle( newHandle );
+                        // this.drawHandle( newHandle );
                     }
                     else
                     {
@@ -348,9 +354,7 @@ export default class ARAP
                     }
                 }
             }
-
-            console.log( "handle ary length", handlesAry.length )
-            this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
+            await this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
                 async () =>
                 {
                     console.log( `Compilation frame ${i} finished! ` );
@@ -443,7 +447,7 @@ export default class ARAP
                     // {
                     //     if ( nearestHandleIndex == null )
                     //     {
-                    newHandle = this.createHandleAtPosition( srcPos, this.model.geometry.faces, this.deformedVertices );
+                    newHandle = this.createHandleAtPosition( srcPos, this.targetMesh.geometry.faces, this.deformedVertices );
                     this.handles.push( newHandle );
                     srcHandlesPosAry.push( srcPos );
                     tgtHandlesPosAry.push( tgtPos );
@@ -468,7 +472,7 @@ export default class ARAP
         console.log( "all preCompute complete length", this.preComputeDeformedVerticesAry.length )
     }
 
-    preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry, warpBack )
+    async preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry, warpBack )
     {
         // if ( this.handles.length == 0 )
         //     return;
@@ -480,7 +484,7 @@ export default class ARAP
 
         console.time( 'preComputeWarpFrame' )
 
-        for ( let i = 0; i < this.degDiffBetweenTwoSourceImg + 1; i++ )
+        for ( let i = 0; i < this.degDiffBetweenTwoSourceImg; i++ )
         {
             const newHandlesPosAry = [];
             const interpolationRatio = i / this.degDiffBetweenTwoSourceImg;
@@ -498,7 +502,6 @@ export default class ARAP
                 // }
                 newHandlesPosAry.push( newHandlePos );
             }
-
             const newVerticesFrame = this.LinearAlgebra.manipulation_test( newHandlesPosAry, this.edges, this.originalVertices );
 
             this.preComputeDeformedVerticesAry.push( newVerticesFrame );
@@ -508,49 +511,37 @@ export default class ARAP
         console.timeEnd( 'preComputeWarpFrame' )
     }
 
-    warpBetweenTwoSourceImage()
+    warpFrame()
     {
-        if ( this.preComputeDeformedVerticesAry.length == 0 )
-            return;
+        // if ( this.preComputeDeformedVerticesAry.length == 0 )
+        //     return;
 
         const frameIndex = Math.round( this.warpFrameIndex );
         console.log( "frameIndex", frameIndex );
 
         const perImageInterpolationFrames = ( this.degDiffBetweenTwoSourceImg + 1 ) / 2;
-        const textureIndex = parseInt( frameIndex / perImageInterpolationFrames ) * this.degDiffBetweenTwoSourceImg;
-        console.log( "textureIndex", textureIndex );
+        const textureIndex = Math.round( frameIndex  / perImageInterpolationFrames ) * this.degDiffBetweenTwoSourceImg;
         this.objectMgr.updateTextureByFrameIndex( textureIndex )
+        console.log( "textureIndex", textureIndex );
 
-        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
-        {
-            this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
-            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
-            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
-        }
+        const meshIndex = parseInt( frameIndex /  this.degDiffBetweenTwoSourceImg )
+        this.targetMesh.updateGeometry(this.objectMgr.preComputeDelaunayGeo[meshIndex]);
+        console.log("mesh index",meshIndex)
 
-        // handle position
-        for ( let j = 0; j < this.preComputeHandlePosAry[ frameIndex ].length; j++ )
-        {
-            this.handles[ j ].position.copy( this.preComputeHandlePosAry[ frameIndex ][ j ] );
-        }
-        this.model.geometry.attributes.position.needsUpdate = true;
-    }
 
-    warpFrame()
-    {
-        if ( this.preComputeDeformedVerticesAry.length == 0 )
-            return;
+        // for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
+        // {
+        //     this.targetMesh.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
+        //     this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
+        //     this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
+        // }
 
-        const frameIndex = Math.round( this.warpFrameIndex );
-        this.objectMgr.updateTextureByFrameIndex( frameIndex )
-
-        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
-        {
-            this.model.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
-            this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
-            this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
-        }
-        this.model.geometry.attributes.position.needsUpdate = true;
+        // // handle position
+        // for ( let j = 0; j < this.handles.length; j++ )
+        // {
+        //     this.handles[ j ].position.copy( this.preComputeHandlePosAry[ frameIndex ][ j ] );
+        // }
+        // this.targetMesh.geometry.attributes.position.needsUpdate = true;
     }
 
     playPreWarpFrameAnimation()
@@ -559,7 +550,7 @@ export default class ARAP
         const rotataAnimation = setInterval( () =>
         {
             this.warpFrameIndex += 1;
-            if ( this.warpFrameIndex < 6 )
+            if ( this.warpFrameIndex < 10 )
             {
                 this.warpFrame()
             }
@@ -578,12 +569,12 @@ export default class ARAP
             if ( this.warpFrameIndex < 360 )
             {
                 const frameIndex = Math.round( this.warpFrameIndex );
-                console.log("frameindex")
+                console.log( "frameindex" )
 
                 this.objectMgr.updateTextureByFrameIndex( frameIndex )
                 if ( frameIndex % 5 == 0 )
-                    this.model.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ frameIndex/5 ] )
-                    
+                    this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ frameIndex / 5 ] )
+
                 this.warpFrameIndex += 1;
             }
             else
@@ -619,7 +610,7 @@ export default class ARAP
                     this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
                         () =>
                         {
-                            console.log( 'Compilation finished! Can drag model!' );
+                            console.log( 'Compilation finished! Can drag targetMesh!' );
                         } );
                 }, 20 );
             }
@@ -637,7 +628,7 @@ export default class ARAP
                     this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
                         () =>
                         {
-                            console.log( 'Compilation finished! Can drag model!' );
+                            console.log( 'Compilation finished! Can drag targetMesh!' );
                         } );
                 }, 20 );
             }
@@ -678,17 +669,17 @@ export default class ARAP
             this.selectedHandle.position.x = mouseTarget.x;
             this.selectedHandle.position.y = mouseTarget.y;
 
-            // model might not have loaded so might need to moved listeners to after the 
-            // model has loaded
+            // targetMesh might not have loaded so might need to moved listeners to after the 
+            // targetMesh has loaded
             let newVertices = this.LinearAlgebra.manipulation( this.handles, this.edges, this.originalVertices );
             for ( let i = 0; i < newVertices.length; i++ )
             {
-                this.model.geometry.attributes.position.setXY( i, newVertices[ i ].x, newVertices[ i ].y );
+                this.targetMesh.geometry.attributes.position.setXY( i, newVertices[ i ].x, newVertices[ i ].y );
 
                 this.testGeometry.vertices[ i ].x = newVertices[ i ].x
                 this.testGeometry.vertices[ i ].y = newVertices[ i ].y
             }
-            this.model.geometry.attributes.position.needsUpdate = true;
+            this.targetMesh.geometry.attributes.position.needsUpdate = true;
         }
     }
 
@@ -705,7 +696,7 @@ export default class ARAP
         const mouseWorldPos = new THREE.Vector2( x, )
         mouseWorldPos.set( ( x / window.innerWidth ) * 2 - 1, -( y / window.innerHeight ) * 2 + 1 );
         this.raycaster.setFromCamera( mouseWorldPos, this.camera )
-        const intersect = this.raycaster.intersectObject( this.model );
+        const intersect = this.raycaster.intersectObject( this.targetMesh );
         if ( intersect.length > 0 )
         {
             return true;
@@ -721,32 +712,25 @@ export default class ARAP
         this.w = weight;
     }
 
-    async initializeFromMesh( mesh )
+    async initializeFromMesh( geometry )
     {
-        console.time( 'init' )
-        // for ( let f_iter = mesh.triMesh.faces_begin(); f_iter.idx() !== mesh.triMesh.faces_end().idx(); f_iter.next() )
-        // {
-        //     const vertexIDs = [];
-        //     let fv_iter = mesh.triMesh.fv_cwiter(f_iter.handle());
-        //     vertexIDs.push(fv_iter.handle().idx());
-        //     await fv_iter.next();
-        //     vertexIDs.push(fv_iter.handle().idx());
-        //     await fv_iter.next();
-        //     vertexIDs.push(fv_iter.handle().idx());
-        //     console.log("faceid",f_iter.handle().idx());
-        //     console.log("vertexids",vertexIDs);
-        // }
+        console.time( 'arap_init_mesh' )
 
-        // console.log( mesh );
-        this.model = mesh;
+        // this.targetMesh = mesh;
         // ***this geometry structure is deprecated after v125 threejs test
-        const positionAttribute = this.model.geometry.getAttribute( 'position' );
+        const positionAttribute = this.targetMesh.geometry.getAttribute( 'position' );
         // ###deprecated
-        this.testGeometry.fromBufferGeometry( mesh.geometry );
-        console.log( this.testGeometry );
+        this.testGeometry.dispose();
+        this.testGeometry = new Geometry()
+        this.testGeometry.fromBufferGeometry( geometry );
+        console.log("geometry",geometry);
+        console.log("arap init geometry", this.testGeometry );
 
         this.faces = this.testGeometry.faces;
+        // console.log("face",this.faces);
         // this.faces = mesh.geometry.faces;
+
+        this.edges = [];
         for ( let i = 0; i < this.faces.length; i++ )
         {
             const currentEdge1 = new Edge( this.faces[ i ].a, this.faces[ i ].b, i );
@@ -756,6 +740,7 @@ export default class ARAP
             if ( !Edge.edgeDoesExist( this.edges, currentEdge2 ) ) { this.edges.push( currentEdge2 ); }
             if ( !Edge.edgeDoesExist( this.edges, currentEdge3 ) ) { this.edges.push( currentEdge3 ); }
         }
+        // console.log("edge",this.edges);
 
         for ( let i = 0; i < this.edges.length; i++ )
         {
@@ -779,10 +764,8 @@ export default class ARAP
         // ###deprecated
         this.originalVertices = cloneVertices( this.testGeometry.vertices );
         this.deformedVertices = cloneVertices( this.testGeometry.vertices );
-        // this.originalVertices = cloneVertices( this.model.geometry.vertices );
-        // this.deformedVertices = cloneVertices( this.model.geometry.vertices );
-        this.LinearAlgebra.registration( this.edges, this.originalVertices, this.deformedVertices );
-        console.timeEnd( 'init' )
+        await this.LinearAlgebra.registration( this.edges, this.originalVertices, this.deformedVertices );
+        console.timeEnd( 'arap_init_mesh' )
         console.log( "init complete" )
     }
 
@@ -871,7 +854,7 @@ export default class ARAP
             this.LinearAlgebra.compilation( this.handles, this.originalVertices, this.barycentricCoordMode,
                 () =>
                 {
-                    console.log( 'Compilation finished! Can drag model!' );
+                    console.log( 'Compilation finished! Can drag targetMesh!' );
                 } );
         }, 20 );
     }
@@ -883,11 +866,11 @@ export default class ARAP
 
         for ( let i = 0; i < this.originalVertices.length; i++ )
         {
-            this.model.geometry.attributes.position.setXY( i, this.originalVertices[ i ].x, this.originalVertices[ i ].y );
+            this.targetMesh.geometry.attributes.position.setXY( i, this.originalVertices[ i ].x, this.originalVertices[ i ].y );
             this.testGeometry.vertices[ i ].x = this.originalVertices[ i ].x
             this.testGeometry.vertices[ i ].y = this.originalVertices[ i ].y
         }
-        this.model.geometry.attributes.position.needsUpdate = true;
+        this.targetMesh.geometry.attributes.position.needsUpdate = true;
         this.deformedVertices = cloneVertices( this.testGeometry.vertices );
         this.LinearAlgebra.resetDeformedVertices( this.deformedVertices )
         this.handlesVisible = true;
