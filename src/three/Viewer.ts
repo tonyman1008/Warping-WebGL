@@ -9,7 +9,7 @@ import ARAP from './ARAP/ARAP';
 import testImgPath from 'assets/Image/car_1000x1000/0.png';
 import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
-import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
+import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_200vertices_72view_5degDiff.json';
 import { getGeometry } from './Delaunator';
 
 declare global
@@ -77,7 +77,7 @@ export default class Viewer
         ARAPFolder.add(this.ARAP, 'testMatchPoints').name('matchVertices');
         ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry').name('matchBarycentry')
         ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 10000, 1).name('weight');
-        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, 9, 1).listen().onChange(() =>
+        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, this.ARAP.targetFramesAmount - 1, 1).listen().onChange(() =>
         {
             this.ARAP.warpFrame();
         })
@@ -130,7 +130,7 @@ export default class Viewer
         const positionAttribute = originGeo.getAttribute('position');
         let PositionAttributeAry = positionAttribute.clone().array;
 
-        for (let i = 0; i < 2; i++)
+        for (let i = 0; i < CorrespondenceData.matchPointSeqData.length; i++)
         {
             const jsonArray = CorrespondenceData.matchPointSeqData[i].matchPoints;
             let remeshPoint = Array.from(PositionAttributeAry);
@@ -229,26 +229,26 @@ export default class Viewer
             }
 
             // area constraint
-            // for (let k = -5; k < 5; k++)
-            // {
-            //     const testPoints = new THREE.Vector3(textureWidth / 2 * k * 0.1, textureHeight / 2 * 0.5, 0);
-            //     const testPointsDown = new THREE.Vector3(textureWidth / 2 * k * 0.1, -textureHeight / 2 * 0.5, 0);
-            //     const matchPosPair = { src: testPoints, tgt: testPoints };
-            //     const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
-            //     MatchPointsArray.push(matchPosPair, matchPosPairDown);
-            // }
+            const sqareIndex = 9;
+            for (let k = -sqareIndex; k < sqareIndex; k++)
+            {
+                const testPoints = new THREE.Vector3(textureWidth / 2 * k * 0.1, textureHeight / 2 * sqareIndex * 0.1, 0);
+                const testPointsDown = new THREE.Vector3(textureWidth / 2 * k * 0.1, -textureHeight / 2 * sqareIndex * 0.1, 0);
+                const matchPosPair = { src: testPoints, tgt: testPoints };
+                const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
+                MatchPointsArray.push(matchPosPair, matchPosPairDown);
+            }
 
-            // for (let k = -5; k < 5; k++)
-            // {
-            //     const testPoints = new THREE.Vector3(textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
-            //     const testPointsDown = new THREE.Vector3(-textureWidth / 2 * 0.5, textureHeight / 2 * k * 0.1, 0);
-            //     const matchPosPair = { src: testPoints, tgt: testPoints };
-            //     const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
-            //     MatchPointsArray.push(matchPosPair, matchPosPairDown);
-            // }
+            for (let k = -sqareIndex; k < sqareIndex; k++)
+            {
+                const testPoints = new THREE.Vector3(textureWidth / 2 * sqareIndex * 0.1, textureHeight / 2 * k * 0.1, 0);
+                const testPointsDown = new THREE.Vector3(-textureWidth / 2 * sqareIndex * 0.1, textureHeight / 2 * k * 0.1, 0);
+                const matchPosPair = { src: testPoints, tgt: testPoints };
+                const matchPosPairDown = { src: testPointsDown, tgt: testPointsDown };
+                MatchPointsArray.push(matchPosPair, matchPosPairDown);
+            }
 
             this.ARAP.matchPointsSeqArray.push(MatchPointsArray)
-            // console.log("match points length", this.ARAP.matchPointsArray.length);
         }
     }
 
