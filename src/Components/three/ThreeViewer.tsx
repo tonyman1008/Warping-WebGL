@@ -2,17 +2,21 @@ import * as React from "react";
 import { useEffect } from "react";
 import Viewer from "three/Viewer";
 import "./ThreeViewer.css"
-const ThreeViewer = () => {
+const ThreeViewer = () =>
+{
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         const three = new Viewer();
         three.animate();
-        return () => {
+        return () =>
+        {
             three.clear();
         }
     }, [])
     return (
         <div className="viewerContainer">
+            <div id="frameIndex"> 5 </div>
             <canvas id="three-canvas" />
         </div>
     );

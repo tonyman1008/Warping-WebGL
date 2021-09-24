@@ -46,7 +46,7 @@ export default class ARAP
         this.preComputeDeformedVerticesAry = [];
         this.preComputeHandlePosAry = [];
         this.animationFPS = 5;
-        this.targetFramesAmount =360;
+        this.targetFramesAmount = 10;
         this.handleColor = new THREE.Color( 'Fuchsia' );
     }
 
@@ -314,8 +314,8 @@ export default class ARAP
     async testMatchPoints()
     {
         console.log( "testMatchPoints start" );
-        console.time("ARAP_PreCompute_Process")
-        for ( let i = 0; i < this.targetFramesAmount/this.degDiffBetweenTwoSourceImg; i++ )
+        console.time( "ARAP_PreCompute_Process" )
+        for ( let i = 0; i < this.targetFramesAmount / this.degDiffBetweenTwoSourceImg; i++ )
         {
             // clear
             // this.eraseAllHandle();
@@ -365,7 +365,12 @@ export default class ARAP
                     this.eraseAllHandle();
                 } );
         }
-        console.timeEnd("ARAP_PreCompute_Process")
+
+        // reset to first frame geometry
+        this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ 0 ] )
+        this.objectMgr.updateTextureByFrameIndex( 0 )
+
+        console.timeEnd( "ARAP_PreCompute_Process" )
     }
 
     async testMatchPointsBarycentry()
@@ -493,10 +498,13 @@ export default class ARAP
         this.warpFrameIndex = 0;
         const rotataAnimation = setInterval( () =>
         {
-            this.warpFrameIndex += 1;
             if ( this.warpFrameIndex < this.targetFramesAmount )
             {
-                this.warpFrame()
+                this.warpFrame();
+
+                this.warpFrameIndex += 1;
+                if ( this.warpFrameIndex < this.targetFramesAmount )
+                    document.getElementById( "frameIndex" ).innerHTML = this.warpFrameIndex.toString();
             }
             else
             {
@@ -510,21 +518,25 @@ export default class ARAP
         this.warpFrameIndex = 0;
         const rotataAnimation = setInterval( () =>
         {
-            if ( this.warpFrameIndex < 360 )
+            if ( this.warpFrameIndex < this.targetFramesAmount )
             {
                 const frameIndex = Math.round( this.warpFrameIndex );
-                console.log( "frameindex" )
+                console.log( "frameindex", frameIndex )
 
                 this.objectMgr.updateTextureByFrameIndex( frameIndex )
                 if ( frameIndex % this.degDiffBetweenTwoSourceImg == 0 )
                     this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ frameIndex / this.degDiffBetweenTwoSourceImg ] )
 
                 this.warpFrameIndex += 1;
+                if ( this.warpFrameIndex < this.targetFramesAmount )
+                    document.getElementById( "frameIndex" ).innerHTML = this.warpFrameIndex.toString();
             }
             else
             {
                 clearInterval( rotataAnimation )
             }
+
+
         }, 1000 / this.animationFPS );
     }
 

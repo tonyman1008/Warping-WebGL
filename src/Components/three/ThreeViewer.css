@@ -4,3 +4,10 @@
     overflow: hidden;
     background: #464244;
 }
+
+.viewerContainer #frameIndex{
+    font-size:80px;
+    top:40px;
+    left: 50%;
+    position: absolute;
+}

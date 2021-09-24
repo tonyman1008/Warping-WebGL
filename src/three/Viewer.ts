@@ -9,7 +9,7 @@ import ARAP from './ARAP/ARAP';
 import testImgPath from 'assets/Image/car_1000x1000/0.png';
 import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
-import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_200vertices_72view_5degDiff.json';
+import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
 import { getGeometry } from './Delaunator';
 
 declare global
@@ -40,6 +40,9 @@ export default class Viewer
     soruceTestPoints: THREE.Mesh[];
     targetTestPoints: THREE.Mesh[];
 
+    //utility
+    frameIndex2DText: HTMLElement;
+
     constructor()
     {
         window.three = this;
@@ -59,6 +62,9 @@ export default class Viewer
 
         this.ARAP = new ARAP(this.viewportControls.camera, this.objectMgr, this.scene, this.container);
 
+        this.frameIndex2DText = document.getElementById("frameIndex") as HTMLElement
+        this.frameIndex2DText.innerHTML = this.ARAP.warpFrameIndex.toString();
+
         this.soruceTestPoints = [];
         this.targetTestPoints = [];
         this.testDelaunayRemesh();
@@ -77,9 +83,10 @@ export default class Viewer
         ARAPFolder.add(this.ARAP, 'testMatchPoints').name('matchVertices');
         ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry').name('matchBarycentry')
         ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 10000, 1).name('weight');
-        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, this.ARAP.targetFramesAmount - 1, 1).listen().onChange(() =>
+        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, this.ARAP.targetFramesAmount - 1, 1).listen().onChange((val) =>
         {
             this.ARAP.warpFrame();
+            this.frameIndex2DText.innerHTML = val;
         })
         ARAPFolder.add(this.ARAP, 'playPreWarpFrameAnimation');
         ARAPFolder.add(this.ARAP, 'playViewHoppingAnimation');
