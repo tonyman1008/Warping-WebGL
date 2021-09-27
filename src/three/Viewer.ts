@@ -12,7 +12,6 @@ import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoin
 import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
 import { getGeometry } from './Delaunator';
 import ImageExporter from './base/ImageExport';
-import { textChangeRangeIsUnchanged } from 'typescript';
 
 declare global
 {

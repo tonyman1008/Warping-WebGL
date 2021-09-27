@@ -8,7 +8,7 @@ import { TextureSource } from 'three/object/GridMesh3D';
 export default class ARAP
 {
 
-    constructor( iCamera,  iScene, ICanvas ,IObjManager, iImageExporter)
+    constructor( iCamera, iScene, ICanvas, IObjManager, iImageExporter )
     {
         this.camera = iCamera;
         this.objectMgr = IObjManager;
@@ -332,47 +332,108 @@ export default class ARAP
 
             const matchPoints = this.matchPointsSeqArray[ i ].slice();
 
-            let handlesAry = [];
-            let srcHandlesPosAry = [];
-            let tgtHandlesPosAry = [];
-
-            // create handle from matchPoints data
-            for ( let j = 0; j < matchPoints.length; j++ )
+            for ( let k = 0; k < this.degDiffBetweenTwoSourceImg; k++ )
             {
-                const { x, y } = matchPoints[ j ].src;
+                let handlesAry = [];
+                let srcHandlesPosAry = [];
+                let tgtHandlesPosAry = [];
 
-                const nearestVertexIndex = this.getNearestVertexIndexOnWorldPos( x, y, this.deformedVertices );
-                let newHandle = null;
-
-                if ( !this.handleExists( nearestVertexIndex ) )
+                // create handle from matchPoints data
+                for ( let j = 0; j < matchPoints.length; j++ )
                 {
-                    if ( nearestVertexIndex != null )
+                    const { x, y } = k < ( this.degDiffBetweenTwoSourceImg / 2 ) ? matchPoints[ j ].src : matchPoints[ j ].tgt;
+
+                    const nearestVertexIndex = this.getNearestVertexIndexOnWorldPos( x, y, this.deformedVertices );
+                    let newHandle = null;
+
+                    if ( !this.handleExists( nearestVertexIndex ) )
                     {
-                        newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
-                        // this.handles.push( newHandle );
-                        srcHandlesPosAry.push( matchPoints[ j ].src );
-                        tgtHandlesPosAry.push( matchPoints[ j ].tgt );
-                        handlesAry.push( newHandle );
-                        // this.drawHandle( newHandle );
-                    }
-                    else
-                    {
-                        console.log( 'No vertex found!' );
+                        if ( nearestVertexIndex != null )
+                        {
+                            newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
+                            // this.handles.push( newHandle );
+                            srcHandlesPosAry.push( matchPoints[ j ].src );
+                            tgtHandlesPosAry.push( matchPoints[ j ].tgt );
+                            handlesAry.push( newHandle );
+                            // this.drawHandle( newHandle );
+                        }
+                        else
+                        {
+                            console.log( 'No vertex found!' );
+                        }
                     }
                 }
+
+                // arap compilation
+                await this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
+                    async () =>
+                    {
+                        // console.log( `Compilation frame ${i} finished! ` );
+                        // pre-compute warp frame
+                        // await this.preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry );
+
+                        const newHandlesPosAry = [];
+                        const interpolationRatio = k / this.degDiffBetweenTwoSourceImg;
+                        console.log( "interpolation Ratio", interpolationRatio );
+                        for ( let j = 0; j < srcHandlesPosAry.length; j++ )
+                        {
+                            const newHandlePos = new THREE.Vector3();
+                            newHandlePos.lerpVectors( srcHandlesPosAry[ j ], tgtHandlesPosAry[ j ], interpolationRatio )
+
+                            newHandlesPosAry.push( newHandlePos );
+                        }
+                        const newVerticesFrame = this.LinearAlgebra.manipulation_test( newHandlesPosAry, this.edges, this.originalVertices );
+                        this.preComputeDeformedVerticesAry.push( newVerticesFrame );
+
+                        console.log( "preComputeFrame length", this.preComputeDeformedVerticesAry.length )
+
+                        // this.handleTargetPosAry = [];
+                        // this.handleOriginPosAry = [];
+                        this.eraseAllHandle();
+                    } );
             }
 
-            // arap compilation
-            await this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
-                async () =>
-                {
-                    console.log( `Compilation frame ${i} finished! ` );
-                    // pre-compute warp frame
-                    await this.preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry );
-                    this.handleTargetPosAry = [];
-                    this.handleOriginPosAry = [];
-                    this.eraseAllHandle();
-                } );
+            // let handlesAry = [];
+            // let srcHandlesPosAry = [];
+            // let tgtHandlesPosAry = [];
+
+            // // create handle from matchPoints data
+            // for ( let j = 0; j < matchPoints.length; j++ )
+            // {
+            //     const { x, y } = matchPoints[ j ].src;
+
+            //     const nearestVertexIndex = this.getNearestVertexIndexOnWorldPos( x, y, this.deformedVertices );
+            //     let newHandle = null;
+
+            //     if ( !this.handleExists( nearestVertexIndex ) )
+            //     {
+            //         if ( nearestVertexIndex != null )
+            //         {
+            //             newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
+            //             // this.handles.push( newHandle );
+            //             srcHandlesPosAry.push( matchPoints[ j ].src );
+            //             tgtHandlesPosAry.push( matchPoints[ j ].tgt );
+            //             handlesAry.push( newHandle );
+            //             // this.drawHandle( newHandle );
+            //         }
+            //         else
+            //         {
+            //             console.log( 'No vertex found!' );
+            //         }
+            //     }
+            // }
+
+            // // arap compilation
+            // await this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
+            //     async () =>
+            //     {
+            //         console.log( `Compilation frame ${i} finished! ` );
+            //         // pre-compute warp frame
+            //         await this.preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry );
+            //         this.handleTargetPosAry = [];
+            //         this.handleOriginPosAry = [];
+            //         this.eraseAllHandle();
+            //     } );
         }
 
         // reset to first frame geometry
@@ -519,6 +580,8 @@ export default class ARAP
         {
             this.warpFrame();
             document.getElementById( "frameIndex" ).innerHTML = this.nowWarpFrameIndex.toString();
+
+            this.imageExporter.exportCanvasToImage(this.nowWarpFrameIndex.toString())
 
             const nextIndex = this.nowWarpFrameIndex + 1;
             if ( nextIndex == this.endFrameIndex )
@@ -693,8 +756,8 @@ export default class ARAP
         this.testGeometry.dispose();
         this.testGeometry = new Geometry()
         this.testGeometry.fromBufferGeometry( geometry );
-        console.log( "geometry", geometry );
-        console.log( "arap init geometry", this.testGeometry );
+        // console.log( "geometry", geometry );
+        // console.log( "arap init geometry", this.testGeometry );
 
         this.faces = this.testGeometry.faces;
         // console.log("face",this.faces);
