@@ -8,10 +8,11 @@ import { TextureSource } from 'three/object/GridMesh3D';
 export default class ARAP
 {
 
-    constructor( iCamera, IObjManager, iScene, ICanvas )
+    constructor( iCamera,  iScene, ICanvas ,IObjManager, iImageExporter)
     {
         this.camera = iCamera;
         this.objectMgr = IObjManager;
+        this.imageExporter = iImageExporter;
         this.scene = iScene;
         this.canvas = ICanvas;
         this.targetMesh = null;
@@ -41,12 +42,14 @@ export default class ARAP
         this.handleOriginPosAry = [];
         this.handleTargetPosAry = [];
         this.handlesPos = [];
-        this.warpFrameIndex = 0;
-        this.degDiffBetweenTwoSourceImg = 5;
         this.preComputeDeformedVerticesAry = [];
         this.preComputeHandlePosAry = [];
-        this.animationFPS = 5;
-        this.targetFramesAmount = 10;
+        this.nowWarpFrameIndex = 0;
+        this.nowHoppingFrameIndex = 0;
+        this.degDiffBetweenTwoSourceImg = 5;
+        this.animationFPS = 1;
+        this.startFrameIndex = 0;
+        this.endFrameIndex = 10;
         this.handleColor = new THREE.Color( 'Fuchsia' );
     }
 
@@ -315,22 +318,25 @@ export default class ARAP
     {
         console.log( "testMatchPoints start" );
         console.time( "ARAP_PreCompute_Process" )
-        for ( let i = 0; i < this.targetFramesAmount / this.degDiffBetweenTwoSourceImg; i++ )
+        for ( let i = this.startFrameIndex / this.degDiffBetweenTwoSourceImg; i < this.endFrameIndex / this.degDiffBetweenTwoSourceImg; i++ )
         {
             // clear
             // this.eraseAllHandle();
             // this.handleTargetPosAry = [];
             // this.handleOriginPosAry = [];
 
+            // change mesh
             this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ i ] )
             // init arap mesh
             await this.initializeFromMesh( this.objectMgr.preComputeDelaunayGeo[ i ] );
 
             const matchPoints = this.matchPointsSeqArray[ i ].slice();
-            const handlesAry = [];
+
+            let handlesAry = [];
             let srcHandlesPosAry = [];
             let tgtHandlesPosAry = [];
 
+            // create handle from matchPoints data
             for ( let j = 0; j < matchPoints.length; j++ )
             {
                 const { x, y } = matchPoints[ j ].src;
@@ -355,10 +361,13 @@ export default class ARAP
                     }
                 }
             }
+
+            // arap compilation
             await this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
                 async () =>
                 {
                     console.log( `Compilation frame ${i} finished! ` );
+                    // pre-compute warp frame
                     await this.preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry );
                     this.handleTargetPosAry = [];
                     this.handleOriginPosAry = [];
@@ -367,8 +376,12 @@ export default class ARAP
         }
 
         // reset to first frame geometry
-        this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ 0 ] )
-        this.objectMgr.updateTextureByFrameIndex( 0 )
+        const textureIndex = parseInt( this.startFrameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg;
+        await this.objectMgr.updateTextureByFrameIndex( textureIndex );
+
+        const meshIndex = parseInt( this.startFrameIndex / this.degDiffBetweenTwoSourceImg )
+        this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ meshIndex ] );
+
 
         console.timeEnd( "ARAP_PreCompute_Process" )
     }
@@ -441,16 +454,9 @@ export default class ARAP
             console.log( "interratio", interpolationRatio );
             for ( let j = 0; j < srcHandlesPosAry.length; j++ )
             {
-
                 const newHandlePos = new THREE.Vector3();
-                // if ( i<this.degDiffBetweenTwoSourceImg/2 )
-                // {
                 newHandlePos.lerpVectors( srcHandlesPosAry[ j ], tgtHandlesPosAry[ j ], interpolationRatio )
-                // }
-                // else
-                // {
-                //     newHandlePos.lerpVectors( srcHandlesPosAry[ j ], tgtHandlesPosAry[ j ], ( 1 - interpolationRatio ) )
-                // }
+
                 newHandlesPosAry.push( newHandlePos );
             }
             const newVerticesFrame = this.LinearAlgebra.manipulation_test( newHandlesPosAry, this.edges, this.originalVertices );
@@ -462,25 +468,28 @@ export default class ARAP
         console.timeEnd( 'preComputeWarpFrame' )
     }
 
-    warpFrame()
+    async warpFrame()
     {
         if ( this.preComputeDeformedVerticesAry.length == 0 )
             return;
 
-        const frameIndex = Math.round( this.warpFrameIndex );
+        const frameIndex = Math.round( this.nowWarpFrameIndex );
         console.log( "frameIndex", frameIndex );
 
-        const textureIndex = parseInt( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg;
-        this.objectMgr.updateTextureByFrameIndex( textureIndex )
+        // switch texture at middle point
+        const textureIndex = Math.round( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg;
+        await this.objectMgr.updateTextureByFrameIndex( textureIndex );
         console.log( "textureIndex", textureIndex );
 
         const meshIndex = parseInt( frameIndex / this.degDiffBetweenTwoSourceImg )
         this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ meshIndex ] );
         console.log( "mesh index", meshIndex )
 
-        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ frameIndex ].length; i++ )
+        // 
+        const preComputeStartIndex = frameIndex - this.startFrameIndex
+        for ( let i = 0; i < this.preComputeDeformedVerticesAry[ preComputeStartIndex ].length; i++ )
         {
-            this.targetMesh.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x, this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y );
+            this.targetMesh.geometry.attributes.position.setXY( i, this.preComputeDeformedVerticesAry[ preComputeStartIndex ][ i ].x, this.preComputeDeformedVerticesAry[ preComputeStartIndex ][ i ].y );
             // this.testGeometry.vertices[ i ].x = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].x;
             // this.testGeometry.vertices[ i ].y = this.preComputeDeformedVerticesAry[ frameIndex ][ i ].y;
         }
@@ -493,50 +502,55 @@ export default class ARAP
         // this.targetMesh.geometry.attributes.position.needsUpdate = true;
     }
 
-    playPreWarpFrameAnimation()
+    async hoppingFrame()
     {
-        this.warpFrameIndex = 0;
+        const frameIndex = Math.round( this.nowHoppingFrameIndex );
+        console.log( "frameindex", frameIndex )
+
+        await this.objectMgr.updateTextureByFrameIndex( frameIndex )
+        if ( frameIndex % this.degDiffBetweenTwoSourceImg == 0 )
+            this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ frameIndex / this.degDiffBetweenTwoSourceImg ] )
+    }
+
+    async playPreWarpFrameAnimation()
+    {
+        this.nowWarpFrameIndex = this.startFrameIndex;
         const rotataAnimation = setInterval( () =>
         {
-            if ( this.warpFrameIndex < this.targetFramesAmount )
-            {
-                this.warpFrame();
+            this.warpFrame();
+            document.getElementById( "frameIndex" ).innerHTML = this.nowWarpFrameIndex.toString();
 
-                this.warpFrameIndex += 1;
-                if ( this.warpFrameIndex < this.targetFramesAmount )
-                    document.getElementById( "frameIndex" ).innerHTML = this.warpFrameIndex.toString();
+            const nextIndex = this.nowWarpFrameIndex + 1;
+            if ( nextIndex == this.endFrameIndex )
+            {
+                clearInterval( rotataAnimation )
             }
             else
             {
-                clearInterval( rotataAnimation )
+                this.nowWarpFrameIndex = nextIndex
             }
         }, 1000 / this.animationFPS );
     }
 
-    playViewHoppingAnimation()
+    async playViewHoppingAnimation()
     {
-        this.warpFrameIndex = 0;
+        this.nowHoppingFrameIndex = this.startFrameIndex;
         const rotataAnimation = setInterval( () =>
         {
-            if ( this.warpFrameIndex < this.targetFramesAmount )
-            {
-                const frameIndex = Math.round( this.warpFrameIndex );
-                console.log( "frameindex", frameIndex )
+            this.hoppingFrame();
+            document.getElementById( "frameIndex" ).innerHTML = this.nowHoppingFrameIndex.toString();
 
-                this.objectMgr.updateTextureByFrameIndex( frameIndex )
-                if ( frameIndex % this.degDiffBetweenTwoSourceImg == 0 )
-                    this.targetMesh.updateGeometry( this.objectMgr.preComputeDelaunayGeo[ frameIndex / this.degDiffBetweenTwoSourceImg ] )
+            // this.imageExporter.exportCanvasToImage(this.nowHoppingFrameIndex.toString())
 
-                this.warpFrameIndex += 1;
-                if ( this.warpFrameIndex < this.targetFramesAmount )
-                    document.getElementById( "frameIndex" ).innerHTML = this.warpFrameIndex.toString();
-            }
-            else
+            const nextIndex = this.nowHoppingFrameIndex + 1;
+            if ( nextIndex == this.endFrameIndex )
             {
                 clearInterval( rotataAnimation )
             }
-
-
+            else
+            {
+                this.nowHoppingFrameIndex = nextIndex
+            }
         }, 1000 / this.animationFPS );
     }
 

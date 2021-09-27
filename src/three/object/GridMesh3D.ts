@@ -109,19 +109,22 @@ export default class GridMesh3D extends THREE.Mesh
         if (this.geometry)
         {
             this.geometry.dispose();
-            this.geometry = newGeo;
+            // this.geometry = newGeo;
+            this.geometry.copy(newGeo);
         }
 
         if (this.wireframe?.geometry)
         {
             this.wireframe.geometry.dispose()
-            this.wireframe.geometry = newGeo;
+            // this.wireframe.geometry = newGeo;
+            this.wireframe.geometry.copy(newGeo);
         }
 
         if (this.verticesPoints?.geometry)
         {
             this.verticesPoints.geometry.dispose()
-            this.verticesPoints.geometry = newGeo;
+            // this.verticesPoints.geometry = newGeo;
+            this.verticesPoints.geometry.copy(newGeo);
         }
     }
 

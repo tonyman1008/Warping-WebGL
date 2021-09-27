@@ -11,6 +11,8 @@ import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
 import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
 import { getGeometry } from './Delaunator';
+import ImageExporter from './base/ImageExport';
+import { textChangeRangeIsUnchanged } from 'typescript';
 
 declare global
 {
@@ -28,6 +30,7 @@ export default class Viewer
     viewportControls: ViewportController;
     objectMgr: ObjectManager;
     openMeshController: OpenMesh;
+    imageExporter: ImageExporter;
     meshEditor: MeshEditor;
     datGUI: dat;
 
@@ -52,22 +55,24 @@ export default class Viewer
         //initial set manager
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
-        this.viewportControls.camera.position.set(0, 0, 150)
+        this.viewportControls.camera.position.set(0, 0, 20)
         this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();
         this.meshEditor = new MeshEditor(this.viewportControls.camera);
         this.objectMgr = new ObjectManager(this.scene, this.openMeshController);
+        this.imageExporter = new ImageExporter(this.scene, this.viewportControls.camera, this.viewportControls.renderer);
         this.datGUI = new dat.GUI({ width: 300 });
 
-        this.ARAP = new ARAP(this.viewportControls.camera, this.objectMgr, this.scene, this.container);
+        this.ARAP = new ARAP(this.viewportControls.camera, this.scene, this.container, this.objectMgr, this.imageExporter);
 
         this.frameIndex2DText = document.getElementById("frameIndex") as HTMLElement
-        this.frameIndex2DText.innerHTML = this.ARAP.warpFrameIndex.toString();
+        this.frameIndex2DText.innerHTML = this.ARAP.nowWarpFrameIndex.toString();
 
         this.soruceTestPoints = [];
         this.targetTestPoints = [];
         this.testDelaunayRemesh();
+
         this.setGUI()
     }
 
@@ -83,9 +88,14 @@ export default class Viewer
         ARAPFolder.add(this.ARAP, 'testMatchPoints').name('matchVertices');
         ARAPFolder.add(this.ARAP, 'testMatchPointsBarycentry').name('matchBarycentry')
         ARAPFolder.add(this.ARAP.LinearAlgebra, 'w', 1, 10000, 1).name('weight');
-        ARAPFolder.add(this.ARAP, 'warpFrameIndex', 0, this.ARAP.targetFramesAmount - 1, 1).listen().onChange((val) =>
+        ARAPFolder.add(this.ARAP, 'nowWarpFrameIndex', this.ARAP.startFrameIndex, this.ARAP.endFrameIndex - 1, 1).listen().onChange((val) =>
         {
             this.ARAP.warpFrame();
+            this.frameIndex2DText.innerHTML = val;
+        })
+        ARAPFolder.add(this.ARAP, 'nowHoppingFrameIndex', this.ARAP.startFrameIndex, this.ARAP.endFrameIndex - 1, 1).listen().onChange((val) =>
+        {
+            this.ARAP.hoppingFrame();
             this.frameIndex2DText.innerHTML = val;
         })
         ARAPFolder.add(this.ARAP, 'playPreWarpFrameAnimation');
@@ -148,7 +158,7 @@ export default class Viewer
                 // texture domain anchor is middle (right, top are positive)
                 // need to parse match points data(image domain);
 
-                //source
+                // source
                 const srcX = (jsonArray[j].keyPointOne[0] - textureWidth / 2) / geoScaleDownRate;
                 const srcY = (textureHeight / 2 - jsonArray[j].keyPointOne[1]) / geoScaleDownRate;
                 const srcZ = 0;
@@ -160,7 +170,7 @@ export default class Viewer
                 // this.scene.add(srcTestSphere);
                 // this.soruceTestPoints.push(srcTestSphere);
 
-                //target
+                // target
                 const tgtX = (jsonArray[j].keyPointTwo[0] - textureWidth / 2) / geoScaleDownRate;
                 const tgtY = (textureHeight / 2 - jsonArray[j].keyPointTwo[1]) / geoScaleDownRate;
                 const tgtZ = 0;
@@ -184,6 +194,7 @@ export default class Viewer
         this.testMesh.updateGeometry(this.objectMgr.preComputeDelaunayGeo[0]);
 
         await this.loadMatchPoints();
+        await this.objectMgr.preloadTexture();
 
         this.ARAP.targetMesh = this.testMesh;
         // this.ARAP.initializeFromMesh(this.testMesh);

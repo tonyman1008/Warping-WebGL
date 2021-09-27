@@ -38,6 +38,9 @@ export default class ObjectManager
     // delaunay geometry
     preComputeDelaunayGeo: THREE.BufferGeometry[];
 
+    //
+    preLoadTexturesAry: THREE.Texture[]
+
     constructor(iScene: THREE.Scene, iOpenMesh: OpenMesh)
     {
 
@@ -57,6 +60,7 @@ export default class ObjectManager
 
         this.gridMeshAry = [];
         this.preComputeDelaunayGeo = [];
+        this.preLoadTexturesAry = [];
     }
 
     public async createGridMesh(sourceImgPath: string, targetImgPath: string, blendColor: THREE.Vector4)
@@ -107,7 +111,7 @@ export default class ObjectManager
 
     public async updateTextureByFrameIndex(index: number)
     {
-        // rounding
+        // check if the same
         if (this.sourceTextureIndex == index) return;
 
         this.sourceTextureIndex = index
@@ -119,12 +123,26 @@ export default class ObjectManager
         {
             if (this.sourceTextureIndex >= imageSeqAmount)
                 return;
-            const imgPath = `${testImageSeqPath}${this.sourceTextureIndex}.png`;
+            // const imgPath = `${testImageSeqPath}${this.sourceTextureIndex}.png`;
+            // const sourceTextureMap = await this.textureLoader.loadAsync(imgPath);
+            // sourceTextureMap.wrapS = THREE.RepeatWrapping;
+            // sourceTextureMap.wrapT = THREE.RepeatWrapping;
+            this.gridMeshAry[0].updateTextureByThreeTexture(this.preLoadTexturesAry[this.sourceTextureIndex])
+        }
+    }
+
+    public async preloadTexture()
+    {
+        console.log("preload texture")
+        for (let i = 0; i < 360; i++)
+        {
+            const imgPath = `${testImageSeqPath}${i}.png`;
             const sourceTextureMap = await this.textureLoader.loadAsync(imgPath);
             sourceTextureMap.wrapS = THREE.RepeatWrapping;
             sourceTextureMap.wrapT = THREE.RepeatWrapping;
-            this.gridMeshAry[0].updateTextureByThreeTexture(sourceTextureMap)
+            this.preLoadTexturesAry.push(sourceTextureMap)
         }
+        console.log("preload texture complete")
     }
 
     public switchTextureMap()

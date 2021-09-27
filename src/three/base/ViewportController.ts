@@ -34,7 +34,6 @@ export default class ViewportController
             window.innerWidth / window.innerHeight,
             0.1
         );
-        this.camera.position.set(0, 2, 0);
         this.controls = new OrbitControls(this.camera, canvas);
         this.controls.target.set(0, 0, 0);
         this.controls.domElement = this.renderer.domElement;
