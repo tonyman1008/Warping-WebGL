@@ -99,6 +99,8 @@ export default class Viewer
         })
         ARAPFolder.add(this.ARAP, 'playPreWarpFrameAnimation');
         ARAPFolder.add(this.ARAP, 'playViewHoppingAnimation');
+        ARAPFolder.add(this.ARAP, 'outputWarpFrame');
+        ARAPFolder.add(this.ARAP, 'outputHoppingFrame');
         ARAPFolder.add(this.ARAP, 'animationFPS', 1, 60, 1);
 
         const basicFunctionFolder = this.datGUI.addFolder('Basic Function');

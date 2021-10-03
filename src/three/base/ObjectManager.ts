@@ -134,7 +134,7 @@ export default class ObjectManager
     public async preloadTexture()
     {
         console.log("preload texture")
-        for (let i = 0; i < 360; i++)
+        for (let i = 0; i < imageSeqAmount; i++)
         {
             const imgPath = `${testImageSeqPath}${i}.png`;
             const sourceTextureMap = await this.textureLoader.loadAsync(imgPath);

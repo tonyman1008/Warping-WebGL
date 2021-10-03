@@ -3,7 +3,6 @@ import LinearAlgebra from './linearAlgebra';
 import { cloneVertices, isBorderEdge, createTrianglesFromFaces } from './extras'
 import { Edge } from './edge'
 import { Geometry } from 'three/examples/jsm/deprecated/Geometry.js'; //deprecated
-import { TextureSource } from 'three/object/GridMesh3D';
 
 export default class ARAP
 {
@@ -47,9 +46,9 @@ export default class ARAP
         this.nowWarpFrameIndex = 0;
         this.nowHoppingFrameIndex = 0;
         this.degDiffBetweenTwoSourceImg = 5;
-        this.animationFPS = 1;
-        this.startFrameIndex = 0;
-        this.endFrameIndex = 10;
+        this.animationFPS = 5;
+        this.startFrameIndex = 40;
+        this.endFrameIndex = 50;
         this.handleColor = new THREE.Color( 'Fuchsia' );
     }
 
@@ -586,8 +585,6 @@ export default class ARAP
             this.warpFrame();
             document.getElementById( "frameIndex" ).innerHTML = this.nowWarpFrameIndex.toString();
 
-            this.imageExporter.exportCanvasToImage(this.nowWarpFrameIndex.toString())
-
             const nextIndex = this.nowWarpFrameIndex + 1;
             if ( nextIndex == this.endFrameIndex )
             {
@@ -608,6 +605,48 @@ export default class ARAP
             this.hoppingFrame();
             document.getElementById( "frameIndex" ).innerHTML = this.nowHoppingFrameIndex.toString();
 
+            const nextIndex = this.nowHoppingFrameIndex + 1;
+            if ( nextIndex == this.endFrameIndex )
+            {
+                clearInterval( rotataAnimation )
+            }
+            else
+            {
+                this.nowHoppingFrameIndex = nextIndex
+            }
+        }, 1000 / this.animationFPS );
+    }
+
+    async outputWarpFrame()
+    {
+        this.nowWarpFrameIndex = this.startFrameIndex;
+        const rotataAnimation = setInterval( async () =>
+        {
+            await this.warpFrame();
+            document.getElementById( "frameIndex" ).innerHTML = this.nowWarpFrameIndex.toString();
+
+            this.imageExporter.exportCanvasToImage(this.nowWarpFrameIndex.toString())
+
+            const nextIndex = this.nowWarpFrameIndex + 1;
+            if ( nextIndex == this.endFrameIndex )
+            {
+                clearInterval( rotataAnimation )
+            }
+            else
+            {
+                this.nowWarpFrameIndex = nextIndex
+            }
+        }, 2000  );
+    }
+
+    async outputHoppingFrame()
+    {
+        this.nowHoppingFrameIndex = this.startFrameIndex;
+        const rotataAnimation = setInterval( async () =>
+        {
+            await this.hoppingFrame();
+            document.getElementById( "frameIndex" ).innerHTML = this.nowHoppingFrameIndex.toString();
+
             this.imageExporter.exportCanvasToImage(this.nowHoppingFrameIndex.toString())
 
             const nextIndex = this.nowHoppingFrameIndex + 1;
@@ -619,7 +658,7 @@ export default class ARAP
             {
                 this.nowHoppingFrameIndex = nextIndex
             }
-        }, 1000 / this.animationFPS );
+        }, 2000  );
     }
 
     mouseRightClick( event )
