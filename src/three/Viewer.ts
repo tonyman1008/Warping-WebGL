@@ -11,7 +11,7 @@ import testImgPath2 from 'assets/Image/car_1000x1000/5.png';
 import matchPointsData from 'assets/MatchPointsData/cake/frame0&frame3/MatchPoints.json';
 import CorrespondenceData from 'assets/MatchPointsData/car_1000x1000/unity-output/PotionData_60vertices_72view_5degDiff.json';
 import { getGeometry } from './Delaunator';
-import ImageExporter from './base/ImageExport';
+import ImageExporter from './base/ImageExporter';
 
 declare global
 {
@@ -54,7 +54,7 @@ export default class Viewer
         //initial set manager
         this.viewportControls = new ViewportController();
         this.viewportControls.init(this.container);
-        this.viewportControls.camera.position.set(0, 0, 20)
+        this.viewportControls.camera.position.set(0, 0, 1000)
         this.viewportControls.controls.enableRotate = false;
 
         this.openMeshController = new OpenMesh();

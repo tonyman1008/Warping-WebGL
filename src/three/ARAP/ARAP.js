@@ -341,7 +341,11 @@ export default class ARAP
                 // create handle from matchPoints data
                 for ( let j = 0; j < matchPoints.length; j++ )
                 {
-                    const { x, y } = k < ( this.degDiffBetweenTwoSourceImg / 2 ) ? matchPoints[ j ].src : matchPoints[ j ].tgt;
+                    //method 2
+                    // const { x, y } = k < ( this.degDiffBetweenTwoSourceImg / 2 ) ? matchPoints[ j ].src : matchPoints[ j ].tgt;
+
+                    // method 1
+                    const { x, y } =  matchPoints[ j ].src;
 
                     const nearestVertexIndex = this.getNearestVertexIndexOnWorldPos( x, y, this.deformedVertices );
                     let newHandle = null;
@@ -538,7 +542,8 @@ export default class ARAP
         console.log( "frameIndex", frameIndex );
 
         // switch texture at middle point
-        const textureIndex = Math.round( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg;
+        const textureIndex = parseInt( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg; // method 1
+        // const textureIndex = Math.round( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg; // method 2
         await this.objectMgr.updateTextureByFrameIndex( textureIndex );
         console.log( "textureIndex", textureIndex );
 
@@ -603,7 +608,7 @@ export default class ARAP
             this.hoppingFrame();
             document.getElementById( "frameIndex" ).innerHTML = this.nowHoppingFrameIndex.toString();
 
-            // this.imageExporter.exportCanvasToImage(this.nowHoppingFrameIndex.toString())
+            this.imageExporter.exportCanvasToImage(this.nowHoppingFrameIndex.toString())
 
             const nextIndex = this.nowHoppingFrameIndex + 1;
             if ( nextIndex == this.endFrameIndex )

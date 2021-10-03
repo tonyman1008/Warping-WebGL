@@ -32,7 +32,8 @@ export default class ViewportController
         this.camera = new THREE.PerspectiveCamera(
             50,
             window.innerWidth / window.innerHeight,
-            0.1
+            0.1,
+            10000
         );
         this.controls = new OrbitControls(this.camera, canvas);
         this.controls.target.set(0, 0, 0);
@@ -60,10 +61,10 @@ export default class ViewportController
         const maxSize = Math.max(width, height);
 
         // Convert camera fov degrees to radians
-        const fov = this.camera.fov * (Math.PI / 135);
+        const fovRadian = this.camera.fov * (Math.PI / 180);
 
         // Calculate the camera distance
-        const distance = Math.abs(maxSize / Math.sin(fov / 2));
+        const distance = Math.abs(maxSize / Math.sin(fovRadian / 2));
         this.camera.position.set(0, 0, distance)
     }
 
