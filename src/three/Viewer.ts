@@ -115,8 +115,7 @@ export default class Viewer
     async testCreateMesh()
     {
         //initial TEST
-        const blendColor = new THREE.Vector4(1, 1, 1, 1);
-        this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2, blendColor);
+        this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2);
         this.viewportControls.setCameraPosToFitObject(this.testMesh);
 
         // store initial position buffer attribute
@@ -137,8 +136,7 @@ export default class Viewer
     async testDelaunayRemesh()
     {
         //initial TEST
-        const blendColor = new THREE.Vector4(1, 1, 1, 1);
-        this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2, blendColor);
+        this.testMesh = await this.objectMgr.createGridMesh(testImgPath, testImgPath2);
         this.viewportControls.setCameraPosToFitObject(this.testMesh);
 
         const { textureWidth, textureHeight, geoScaleDownRate } = this.objectMgr;

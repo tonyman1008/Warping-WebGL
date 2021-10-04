@@ -63,7 +63,7 @@ export default class ObjectManager
         this.preLoadTexturesAry = [];
     }
 
-    public async createGridMesh(sourceImgPath: string, targetImgPath: string, blendColor: THREE.Vector4)
+    public async createGridMesh(sourceImgPath: string, targetImgPath: string)
     {
         const sourceTextureMap = await this.textureLoader.loadAsync(sourceImgPath);
         sourceTextureMap.wrapS = THREE.RepeatWrapping;
@@ -78,8 +78,6 @@ export default class ObjectManager
 
         const uniforms = {
             map: { value: sourceTextureMap },
-            uvOffset: { value: new THREE.Vector2(0, 0) },
-            blendColor: { value: blendColor }
         };
 
         const mat = new THREE.ShaderMaterial({

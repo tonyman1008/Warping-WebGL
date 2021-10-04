@@ -47,8 +47,8 @@ export default class ARAP
         this.nowHoppingFrameIndex = 0;
         this.degDiffBetweenTwoSourceImg = 5;
         this.animationFPS = 5;
-        this.startFrameIndex = 40;
-        this.endFrameIndex = 50;
+        this.startFrameIndex = 0;
+        this.endFrameIndex = 360;
         this.handleColor = new THREE.Color( 'Fuchsia' );
     }
 
@@ -331,6 +331,7 @@ export default class ARAP
 
             const matchPoints = this.matchPointsSeqArray[ i ].slice();
 
+            // run interpolation frame between to source image
             for ( let k = 0; k < this.degDiffBetweenTwoSourceImg; k++ )
             {
                 let handlesAry = [];
@@ -367,6 +368,12 @@ export default class ARAP
                     }
                 }
 
+                // skip the source frame don't warp
+                if(k % this.degDiffBetweenTwoSourceImg == 0){
+                    this.preComputeDeformedVerticesAry.push(this.originalVertices);
+                    continue;
+                }
+                
                 // arap compilation
                 await this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
                     async () =>
@@ -395,48 +402,6 @@ export default class ARAP
                         this.eraseAllHandle();
                     } );
             }
-
-            // let handlesAry = [];
-            // let srcHandlesPosAry = [];
-            // let tgtHandlesPosAry = [];
-
-            // // create handle from matchPoints data
-            // for ( let j = 0; j < matchPoints.length; j++ )
-            // {
-            //     const { x, y } = matchPoints[ j ].src;
-
-            //     const nearestVertexIndex = this.getNearestVertexIndexOnWorldPos( x, y, this.deformedVertices );
-            //     let newHandle = null;
-
-            //     if ( !this.handleExists( nearestVertexIndex ) )
-            //     {
-            //         if ( nearestVertexIndex != null )
-            //         {
-            //             newHandle = this.createHandleAtVertex( nearestVertexIndex, this.deformedVertices );
-            //             // this.handles.push( newHandle );
-            //             srcHandlesPosAry.push( matchPoints[ j ].src );
-            //             tgtHandlesPosAry.push( matchPoints[ j ].tgt );
-            //             handlesAry.push( newHandle );
-            //             // this.drawHandle( newHandle );
-            //         }
-            //         else
-            //         {
-            //             console.log( 'No vertex found!' );
-            //         }
-            //     }
-            // }
-
-            // // arap compilation
-            // await this.LinearAlgebra.compilation( handlesAry, this.originalVertices, this.barycentricCoordMode,
-            //     async () =>
-            //     {
-            //         console.log( `Compilation frame ${i} finished! ` );
-            //         // pre-compute warp frame
-            //         await this.preComputeWarpFrame( srcHandlesPosAry, tgtHandlesPosAry );
-            //         this.handleTargetPosAry = [];
-            //         this.handleOriginPosAry = [];
-            //         this.eraseAllHandle();
-            //     } );
         }
 
         // reset to first frame geometry
@@ -540,9 +505,11 @@ export default class ARAP
         const frameIndex = Math.round( this.nowWarpFrameIndex );
         console.log( "frameIndex", frameIndex );
 
-        // switch texture at middle point
-        const textureIndex = parseInt( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg; // method 1
-        // const textureIndex = Math.round( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg; // method 2
+        
+        const textureIndex = parseInt( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg; // method 1 
+        // const textureIndex = Math.round( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg; // method 2 switch texture at middle point
+        // const textureIndex = Math.ceil( frameIndex / this.degDiffBetweenTwoSourceImg ) * this.degDiffBetweenTwoSourceImg; // texture warp back
+
         await this.objectMgr.updateTextureByFrameIndex( textureIndex );
         console.log( "textureIndex", textureIndex );
 
