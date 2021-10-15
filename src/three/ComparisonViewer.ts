@@ -2,15 +2,16 @@ import * as THREE from 'three'
 import ViewportController from "./base/ViewportController";
 import ObjectManager from './base/ObjectManager';
 import BlendingFragmentShader from "three/shader/Blending/BlendingFragmentShader";
+import StitchingFragmentShader from "three/shader/Stitching/StitchingFragmentShader";
+import ColorBlendingFragmentShader from "three/shader/ColorBlendingFragmentShader";
 import BasicFragmentShader from "three/shader/FragmentShader";
 import VertexShader from "three/shader/VertexShader";
 import * as dat from "dat.gui";
 import testImgPath from 'assets/Image/car_1000x1000/0.png';
 import testImgPath2 from 'assets/Image/car_1000x1000/1.png';
-import { AdditiveBlending, MultiplyBlending } from 'three';
-const testGtImageSeqPath = 'Blending/viewHopping/';
-const testWarpSrcImageSeqPath = 'Blending/warpForward/';
-const testWarpTgtImageSeqPath = 'Blending/warpBackward/';
+const testGtImageSeqPath = 'Blending/gt/';
+const testWarpSrcImageSeqPath = 'Blending/forward/';
+const testWarpTgtImageSeqPath = 'Blending/backward/';
 const imageSeqAmount = 360;
 
 declare global
@@ -69,8 +70,8 @@ export default class ComparisonViewer
         this.frameIndex2DText.innerHTML = "0"
 
         this.frameIndex = 0;
-        this.startFrameIndex = 250;
-        this.endFrameIndex = 260;
+        this.startFrameIndex = 0;
+        this.endFrameIndex = 360;
         this.animationFPS = 5;
         this.framesAmountBetweenSourceImg = 5;
         this.posX = 500;
@@ -91,7 +92,7 @@ export default class ComparisonViewer
     {
         this.datGUI.width = '400px'
 
-        this.datGUI.add(this, 'frameIndex', this.startFrameIndex, this.endFrameIndex - 1, 1).listen().onChange((val) =>
+        this.datGUI.add(this, 'frameIndex', this.startFrameIndex, this.endFrameIndex - 1, 1).onChange((val) =>
         {
             this.hoppingFrame();
             this.frameIndex2DText.innerHTML = val;
@@ -137,30 +138,58 @@ export default class ComparisonViewer
         sourceTextureMap.wrapS = THREE.RepeatWrapping;
         sourceTextureMap.wrapT = THREE.RepeatWrapping;
 
-        const uniforms = {
+        // src material
+        const blendTgtColor = new THREE.Vector3(1, 0, 0);
+        const uniformsSrc = {
+            sourceMap: { value: sourceTextureMap },
+            blendColor: { value: blendTgtColor }
+        };
+        const matSrc = new THREE.ShaderMaterial({
+            vertexShader: VertexShader,
+            fragmentShader: ColorBlendingFragmentShader,
+            side: THREE.FrontSide,
+            transparent: true,
+            uniforms: uniformsSrc
+        })
+
+        // tgt material
+        const blendSrcColor = new THREE.Vector3(0, 1, 0);
+        const uniformsTgt = {
+            sourceMap: { value: sourceTextureMap },
+            blendColor: { value: blendSrcColor }
+        };
+        const matTgt = new THREE.ShaderMaterial({
+            vertexShader: VertexShader,
+            fragmentShader: ColorBlendingFragmentShader,
+            side: THREE.FrontSide,
+            transparent: true,
+            uniforms: uniformsTgt
+        })
+
+        // for main warp mesh
+        const uniformsStitch = {
             sourceMap: { value: sourceTextureMap },
             targetMap: { value: targetTextureMap },
             interpVal: { value: 0 },
         };
-
-        const mat = new THREE.ShaderMaterial({
+        const matStitch = new THREE.ShaderMaterial({
             vertexShader: VertexShader,
-            fragmentShader: BlendingFragmentShader,
+            fragmentShader: StitchingFragmentShader,
             side: THREE.FrontSide,
             transparent: true,
-            uniforms: uniforms
+            uniforms: uniformsStitch
         })
 
-        this.warpedMesh = new THREE.Mesh(geo.clone(), mat.clone());
+        this.warpedMesh = new THREE.Mesh(geo.clone(), matStitch);
         this.scene.add(this.warpedMesh);
         this.warpedMesh.position.set(this.posX, this.posY, 0)
 
         // warp source & target
-        this.warpSrcMesh = new THREE.Mesh(geo.clone(), mat.clone())
+        this.warpSrcMesh = new THREE.Mesh(geo.clone(), matSrc)
         this.scene.add(this.warpSrcMesh);
         this.warpSrcMesh.position.set(-this.posX, -this.posY, 0)
 
-        this.warpTgtMesh = new THREE.Mesh(geo.clone(), mat.clone())
+        this.warpTgtMesh = new THREE.Mesh(geo.clone(), matTgt)
         this.scene.add(this.warpTgtMesh);
         this.warpTgtMesh.position.set(this.posX, -this.posY, 0)
     }
@@ -240,6 +269,8 @@ export default class ComparisonViewer
 
         // warp mesh texture
         const interpolationVal = (frameIndex % this.framesAmountBetweenSourceImg) / this.framesAmountBetweenSourceImg;
+        console.log("interpolationVal", interpolationVal);
+
         (this.warpedMesh.material as THREE.ShaderMaterial).uniforms.sourceMap.value = this.preLoadWarpSrcTexturesAry[frameIndex - this.startFrameIndex];
         (this.warpedMesh.material as THREE.ShaderMaterial).uniforms.targetMap.value = this.preLoadWarpTgtTexturesAry[frameIndex - this.startFrameIndex];
         (this.warpedMesh.material as THREE.ShaderMaterial).uniforms.interpVal.value = interpolationVal;
